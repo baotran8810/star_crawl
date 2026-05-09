@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>star_crawl — Plan v3</title>
+<style>
+:root {
+  --color-bg: oklch(98.5% 0.005 80);
+  --color-surface: oklch(100% 0 0);
+  --color-text: oklch(20% 0.01 80);
+  --color-muted: oklch(50% 0.01 80);
+  --color-border: oklch(90% 0.005 80);
+  --color-accent: oklch(52% 0.18 250);
+  --color-accent-soft: oklch(95% 0.04 250);
+  --color-warn: oklch(60% 0.16 50);
+  --color-warn-soft: oklch(96% 0.04 60);
+  --color-ok: oklch(55% 0.15 150);
+  --color-ok-soft: oklch(96% 0.04 150);
+  --color-code-bg: oklch(96% 0.005 80);
+
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-serif: ui-serif, Georgia, "Times New Roman", serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+
+  --text-base: clamp(0.95rem, 0.92rem + 0.15vw, 1.0625rem);
+  --text-h1: clamp(2.25rem, 1.6rem + 2.6vw, 3.75rem);
+  --text-h2: clamp(1.5rem, 1.2rem + 1.2vw, 2.125rem);
+  --text-h3: clamp(1.15rem, 1rem + 0.6vw, 1.4rem);
+
+  --space-section: clamp(3rem, 2rem + 4vw, 5.5rem);
+  --space-block: clamp(1.5rem, 1rem + 1.5vw, 2.5rem);
+
+  --radius: 10px;
+  --radius-sm: 6px;
+  --shadow-sm: 0 1px 2px oklch(20% 0.01 80 / 0.04), 0 1px 1px oklch(20% 0.01 80 / 0.03);
+  --shadow-md: 0 4px 14px oklch(20% 0.01 80 / 0.06), 0 1px 2px oklch(20% 0.01 80 / 0.04);
+
+  --duration: 200ms;
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-bg: oklch(16% 0.01 260);
+    --color-surface: oklch(20% 0.012 260);
+    --color-text: oklch(94% 0.01 260);
+    --color-muted: oklch(68% 0.015 260);
+    --color-border: oklch(28% 0.012 260);
+    --color-accent: oklch(72% 0.16 250);
+    --color-accent-soft: oklch(28% 0.06 250);
+    --color-warn: oklch(78% 0.14 60);
+    --color-warn-soft: oklch(30% 0.06 60);
+    --color-ok: oklch(75% 0.14 150);
+    --color-ok-soft: oklch(28% 0.06 150);
+    --color-code-bg: oklch(24% 0.012 260);
+    --shadow-sm: 0 1px 2px oklch(0% 0 0 / 0.3);
+    --shadow-md: 0 6px 20px oklch(0% 0 0 / 0.35);
+  }
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  line-height: 1.65;
+  color: var(--color-text);
+  background:
+    radial-gradient(circle at 12% -10%, var(--color-accent-soft) 0%, transparent 45%),
+    radial-gradient(circle at 100% 0%, var(--color-warn-soft) 0%, transparent 35%),
+    var(--color-bg);
+  background-attachment: fixed;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+
+@media (min-width: 1024px) {
+  .layout {
+    grid-template-columns: 220px 1fr;
+    gap: 3rem;
+  }
+}
+
+aside.toc {
+  display: none;
+}
+@media (min-width: 1024px) {
+  aside.toc {
+    display: block;
+    position: sticky;
+    top: 2rem;
+    align-self: start;
+    padding-top: var(--space-section);
+    font-size: 0.875rem;
+    border-right: 1px solid var(--color-border);
+    padding-right: 1.5rem;
+    max-height: calc(100vh - 4rem);
+    overflow-y: auto;
+  }
+}
+.toc h4 {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+  margin: 0 0 1rem;
+}
+.toc ol {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  counter-reset: section;
+}
+.toc ol li {
+  counter-increment: section;
+  margin: 0.4rem 0;
+}
+.toc ol li::before {
+  content: counter(section, decimal-leading-zero);
+  display: inline-block;
+  width: 2.5em;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--color-muted);
+}
+.toc a {
+  color: var(--color-text);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: border-color var(--duration) var(--ease), color var(--duration) var(--ease);
+}
+.toc a:hover { color: var(--color-accent); border-bottom-color: var(--color-accent); }
+
+main {
+  padding: var(--space-section) 0;
+  min-width: 0;
+}
+
+header.hero {
+  border-bottom: 1px solid var(--color-border);
+  padding-bottom: var(--space-block);
+  margin-bottom: var(--space-block);
+}
+header.hero .eyebrow {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--color-accent);
+  margin: 0 0 1rem;
+}
+header.hero h1 {
+  font-family: var(--font-serif);
+  font-size: var(--text-h1);
+  font-weight: 600;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  margin: 0 0 1rem;
+}
+header.hero h1 .accent {
+  font-style: italic;
+  color: var(--color-accent);
+  font-weight: 500;
+}
+header.hero p.lede {
+  font-size: 1.15rem;
+  color: var(--color-muted);
+  max-width: 56ch;
+  margin: 0;
+}
+header.hero .meta {
+  margin-top: 1.5rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--color-muted);
+}
+header.hero .meta span strong {
+  color: var(--color-text);
+  font-weight: 500;
+}
+
+section {
+  margin-block: var(--space-section);
+  scroll-margin-top: 2rem;
+}
+section > h2 {
+  font-family: var(--font-serif);
+  font-size: var(--text-h2);
+  font-weight: 600;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+  margin: 0 0 0.5rem;
+  position: relative;
+  padding-left: 1.5rem;
+}
+section > h2::before {
+  content: counter(s, decimal-leading-zero);
+  counter-increment: s;
+  position: absolute;
+  left: 0;
+  top: 0.6em;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 500;
+  color: var(--color-accent);
+  letter-spacing: 0.1em;
+}
+main { counter-reset: s; }
+
+section > h2 + p.section-sub {
+  color: var(--color-muted);
+  margin: 0 0 var(--space-block);
+  padding-left: 1.5rem;
+  max-width: 60ch;
+}
+
+h3 {
+  font-family: var(--font-sans);
+  font-size: var(--text-h3);
+  font-weight: 600;
+  margin: 2rem 0 0.75rem;
+  letter-spacing: -0.005em;
+}
+
+p { margin: 0 0 1rem; }
+
+ul, ol { margin: 0 0 1rem; padding-left: 1.25rem; }
+li { margin: 0.25rem 0; }
+li::marker { color: var(--color-muted); }
+
+a {
+  color: var(--color-accent);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: border-color var(--duration) var(--ease);
+}
+a:hover { border-bottom-color: var(--color-accent); }
+
+code {
+  font-family: var(--font-mono);
+  font-size: 0.88em;
+  background: var(--color-code-bg);
+  padding: 0.1em 0.4em;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+}
+
+pre {
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  line-height: 1.55;
+  background: var(--color-code-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 1.1rem 1.25rem;
+  overflow-x: auto;
+  margin: 1rem 0;
+}
+pre code {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: inherit;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1rem 0 1.5rem;
+  font-size: 0.92rem;
+  background: var(--color-surface);
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--color-border);
+}
+thead { background: var(--color-code-bg); }
+th, td {
+  text-align: left;
+  padding: 0.7rem 1rem;
+  border-bottom: 1px solid var(--color-border);
+  vertical-align: top;
+}
+th {
+  font-weight: 600;
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover { background: var(--color-code-bg); }
+
+.callout {
+  border-left: 3px solid var(--color-accent);
+  background: var(--color-accent-soft);
+  padding: 1rem 1.25rem;
+  border-radius: 0 var(--radius) var(--radius) 0;
+  margin: 1.5rem 0;
+}
+.callout.warn {
+  border-left-color: var(--color-warn);
+  background: var(--color-warn-soft);
+}
+.callout.ok {
+  border-left-color: var(--color-ok);
+  background: var(--color-ok-soft);
+}
+.callout strong { letter-spacing: 0.02em; }
+
+.pill {
+  display: inline-block;
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.04em;
+  background: var(--color-accent-soft);
+  color: var(--color-accent);
+  border: 1px solid color-mix(in oklch, var(--color-accent) 20%, transparent);
+}
+.pill.warn { background: var(--color-warn-soft); color: var(--color-warn); border-color: color-mix(in oklch, var(--color-warn) 20%, transparent); }
+.pill.ok   { background: var(--color-ok-soft);   color: var(--color-ok);   border-color: color-mix(in oklch, var(--color-ok) 20%, transparent); }
+.pill.muted { background: var(--color-code-bg); color: var(--color-muted); border-color: var(--color-border); }
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+  margin: 1.5rem 0;
+}
+.card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 1.1rem 1.2rem;
+  box-shadow: var(--shadow-sm);
+  transition: transform var(--duration) var(--ease), box-shadow var(--duration) var(--ease);
+}
+.card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+.card h4 {
+  margin: 0 0 0.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+}
+.card p {
+  margin: 0;
+  color: var(--color-muted);
+  font-size: 0.88rem;
+}
+
+.diagram {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  white-space: pre;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+  overflow-x: auto;
+  line-height: 1.5;
+  box-shadow: var(--shadow-sm);
+}
+
+footer {
+  margin-top: var(--space-section);
+  padding-top: var(--space-block);
+  border-top: 1px solid var(--color-border);
+  font-size: 0.85rem;
+  color: var(--color-muted);
+}
+footer a { color: var(--color-muted); border-bottom: 1px solid var(--color-border); }
+footer a:hover { color: var(--color-accent); border-bottom-color: var(--color-accent); }
+
+.kbd {
+  font-family: var(--font-mono);
+  font-size: 0.78em;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-bottom-width: 2px;
+  border-radius: 4px;
+  padding: 0.1em 0.4em;
+  color: var(--color-text);
+}
+
+@media print {
+  body { background: white; color: black; }
+  aside.toc { display: none; }
+  .layout { display: block; max-width: none; padding: 0; }
+  pre, table { page-break-inside: avoid; }
+}
+</style>
+</head>
+<body>
+
+<div class="layout">
+
+  <aside class="toc" aria-label="Mục lục">
+    <h4>Mục lục</h4>
+    <ol>
+      <li><a href="#goals">Mục tiêu &amp; Scope</a></li>
+      <li><a href="#references">Reference Repos</a></li>
+      <li><a href="#stack">Stack</a></li>
+      <li><a href="#sources">Source Matrix</a></li>
+      <li><a href="#architecture">Architecture</a></li>
+      <li><a href="#layout">Project Layout</a></li>
+      <li><a href="#configs">Source Configs</a></li>
+      <li><a href="#medium">Medium Adapter</a></li>
+      <li><a href="#roadmap">Roadmap</a></li>
+      <li><a href="#risks">Risks</a></li>
+      <li><a href="#open">Open Questions</a></li>
+    </ol>
+  </aside>
+
+  <main>
+
+    <header class="hero">
+      <p class="eyebrow">PLAN v3 · 2026-05-09</p>
+      <h1><span class="accent">star_crawl</span> — universal web crawler with content extraction</h1>
+      <p class="lede">
+        Một crawler đa nguồn, output LLM-ready markdown / parquet,
+        targeting Uber · Grab · Gojek · Medium và tech blog ecosystem.
+        Plug-in architecture: thêm source mới = thêm 1 file YAML.
+      </p>
+      <div class="meta">
+        <span><strong>Owner</strong> — bao.tn@newera.inc</span>
+        <span><strong>Lang</strong> — Python 3.11+</span>
+        <span><strong>License</strong> — MIT (TBC)</span>
+        <span><strong>Status</strong> — awaiting confirmation</span>
+      </div>
+    </header>
+
+    <section id="goals">
+      <h2>Mục tiêu &amp; Scope</h2>
+      <p class="section-sub">Crawler phải xử lý được nhiều profile site khác nhau: SSR, JS-rendered, Cloudflare-fronted, paywalled. Output sạch, dedup, có metadata.</p>
+
+      <div class="cards">
+        <div class="card">
+          <h4>Crawl đa nguồn</h4>
+          <p>Báo, blog, tech publication. Static HTML + JS-heavy + RSS + sitemap.</p>
+        </div>
+        <div class="card">
+          <h4>Lọc content sạch</h4>
+          <p>Bỏ nav/ads/footer/boilerplate. Giữ main content + metadata (title, author, date, lang).</p>
+        </div>
+        <div class="card">
+          <h4>LLM-ready</h4>
+          <p>Markdown + JSON có schema, sẵn sàng cho RAG / fine-tune dataset.</p>
+        </div>
+        <div class="card">
+          <h4>Pluggable</h4>
+          <p>Thêm source = thêm 1 YAML. Không sửa core code.</p>
+        </div>
+        <div class="card">
+          <h4>Polite</h4>
+          <p>Tôn trọng robots.txt, rate-limit, retry, dedup.</p>
+        </div>
+        <div class="card">
+          <h4>Resumable</h4>
+          <p>SQLite frontier, restart không mất tiến độ.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="references">
+      <h2>Reference repos (verified 2026-05)</h2>
+      <p class="section-sub">Không build lại từ zero. Lấy patterns từ những repo đã chiến nhiều năm.</p>
+
+      <table>
+        <thead>
+          <tr><th>Repo</th><th>Vai trò</th><th>Ghi chú</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><a href="https://github.com/unclecode/crawl4ai">unclecode/crawl4ai</a></td><td>Architecture LLM-friendly, BM25 filter, async + browser pool</td><td>58k+ stars</td></tr>
+          <tr><td><a href="https://github.com/firecrawl/firecrawl">firecrawl/firecrawl</a></td><td>Markdown pipeline, queue/worker, structured extract</td><td>TS + AGPL</td></tr>
+          <tr><td><a href="https://github.com/adbar/trafilatura">adbar/trafilatura</a></td><td><strong>Core extractor</strong> — multi-stage heuristic</td><td>F1 = 0.958 (best)</td></tr>
+          <tr><td><a href="https://github.com/AndyTheFactory/newspaper4k">AndyTheFactory/newspaper4k</a></td><td>Metadata + NLP fallback</td><td>multilingual</td></tr>
+          <tr><td><a href="https://github.com/scrapy/scrapy">scrapy/scrapy</a></td><td>Spider pattern, middleware, throttling</td><td>gold standard</td></tr>
+          <tr><td><a href="https://github.com/microsoft/playwright-python">microsoft/playwright-python</a></td><td>JS rendering + Vercel/CF challenge bypass</td><td>+ stealth</td></tr>
+          <tr><td><a href="https://github.com/Freedium-cfd/web">Freedium-cfd/web</a></td><td><code>medium-parser</code> sub-package — Medium GraphQL parser</td><td>MIT, vendor-able</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="stack">
+      <h2>Stack</h2>
+      <p class="section-sub">Python-first vì ecosystem extract content mạnh nhất. Không dùng dependency nặng nếu không cần.</p>
+
+      <div class="cards">
+        <div class="card"><h4>Fetch HTTP</h4><p><code>httpx[http2]</code> async, real Chrome UA, retry/backoff</p></div>
+        <div class="card"><h4>Fetch JS</h4><p><code>playwright</code> chromium + <code>playwright-stealth</code></p></div>
+        <div class="card"><h4>Extract</h4><p><code>trafilatura</code> chính, <code>readability-lxml</code> fallback, <code>feedparser</code> RSS</p></div>
+        <div class="card"><h4>Frontier</h4><p>SQLite — visited, queue, retry_count, fetched_at</p></div>
+        <div class="card"><h4>Sink</h4><p>JSONL → parquet (<code>pyarrow</code>)</p></div>
+        <div class="card"><h4>CLI</h4><p><code>typer</code> + <code>rich</code></p></div>
+        <div class="card"><h4>Quality</h4><p><code>ruff</code> + <code>pytest</code> + <code>mypy</code></p></div>
+        <div class="card"><h4>Medium (opt-in)</h4><p>Vendor <code>medium-parser</code> + WARP proxy optional</p></div>
+      </div>
+    </section>
+
+    <section id="sources">
+      <h2>Source matrix (đã verify)</h2>
+      <p class="section-sub">Mỗi target có profile khác nhau — quyết định fetcher và discovery strategy tương ứng.</p>
+
+      <table>
+        <thead>
+          <tr><th>Site</th><th>Hosting</th><th>Anti-bot</th><th>Discovery</th><th>Pages</th><th>Độ khó</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Uber Engineering</strong><br><code>uber.com/us/en/blog/engineering/</code></td>
+            <td>Cloudflare + SSR</td>
+            <td><code>__cf_bm</code> cookie, <em>no challenge</em></td>
+            <td>pagination <code>/page/N/</code></td>
+            <td>~63 trang · ~750 bài</td>
+            <td><span class="pill">Trung bình</span></td>
+          </tr>
+          <tr>
+            <td><strong>Grab Engineering</strong><br><code>engineering.grab.com</code></td>
+            <td>GitHub Pages (Jekyll)</td>
+            <td>Không</td>
+            <td>RSS <code>/feed.xml</code> + pagination</td>
+            <td>~29 trang · ~290 bài</td>
+            <td><span class="pill ok">Dễ nhất</span></td>
+          </tr>
+          <tr>
+            <td><strong>Gojek</strong><br><code>gojek.io/blog</code></td>
+            <td>Vercel</td>
+            <td><code>x-vercel-mitigated: challenge</code> — chặn curl</td>
+            <td>TBD (cần browser)</td>
+            <td>TBD</td>
+            <td><span class="pill warn">Khó (browser)</span></td>
+          </tr>
+          <tr>
+            <td><strong>Medium</strong> (opt-in)<br><code>medium.com</code></td>
+            <td>Cloudflare Turnstile</td>
+            <td>Block tất cả non-browser; <code>ClaudeBot Disallow: /</code></td>
+            <td>Vendor <code>medium-parser</code> → GraphQL trực tiếp</td>
+            <td>RSS feeds + tag/topic</td>
+            <td><span class="pill warn">Đỏ — opt-in flag</span></td>
+          </tr>
+          <tr>
+            <td><strong>First-party tech blogs</strong></td>
+            <td>Mixed (CDN + Medium custom domains)</td>
+            <td>Đa số không có</td>
+            <td>RSS first-party</td>
+            <td>~500-1000 bài</td>
+            <td><span class="pill ok">Dễ</span></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>First-party RSS feeds (đề xuất default-on)</h3>
+      <pre><code># configs/sources/firstparty_engineering.yaml
+feeds:
+  - https://netflixtechblog.com/feed
+  - https://medium.com/airbnb-engineering/feed
+  - https://stripe.com/blog/feed.rss
+  - https://blog.cloudflare.com/rss/
+  - https://github.blog/engineering/feed/
+  - https://engineering.atspotify.com/feed/
+  - https://shopify.engineering/blog.atom
+  - https://discord.com/blog/rss.xml
+  - https://www.figma.com/blog/engineering/rss/
+  - https://vercel.com/atom
+  - https://eng.lyft.com/feed
+  - https://slack.engineering/feed/</code></pre>
+    </section>
+
+    <section id="architecture">
+      <h2>Architecture</h2>
+      <p class="section-sub">Pipeline đơn hướng. Mỗi tầng có interface rõ — dễ test, dễ thay.</p>
+
+      <div class="diagram">┌─ Source plugin (YAML) ───────────────────────┐
+│  uber_engineering / grab / gojek / medium    │
+│  · seed_strategy: pagination | rss | sitemap │
+│  · fetcher: http | browser | medium_graphql  │
+│  · url_filter: regex                         │
+│  · extractor_hints: selectors fallback       │
+└──────────────┬───────────────────────────────┘
+               │
+               ▼
+       Frontier (SQLite: visited, queue, retry)
+               │
+               ▼
+   ┌────────────── Fetcher router ──────────────┐
+   │  HttpFetcher       ← Uber, Grab, RSS       │
+   │  BrowserFetcher    ← Gojek (playwright)    │
+   │  MediumGraphQL     ← Medium (opt-in, WARP) │
+   └────────────────────┬───────────────────────┘
+                        │
+                        ▼
+       Extractor (trafilatura → readability fallback)
+                        │
+                        ▼
+       Normalizer + Filter (lang, dedup hash, quality)
+                        │
+                        ▼
+       Sink (JSONL → parquet → optional Postgres / vector DB)
+</div>
+    </section>
+
+    <section id="layout">
+      <h2>Project layout</h2>
+      <p class="section-sub">Many small files &gt; few large. Cohesion theo feature, không theo type.</p>
+
+      <pre><code>star_crawl/
+├── src/star_crawl/
+│   ├── core/
+│   │   ├── frontier.py          # SQLite queue + dedup
+│   │   ├── schemas.py           # Document, SourceConfig (pydantic)
+│   │   └── pipeline.py          # orchestrator
+│   ├── fetchers/
+│   │   ├── http.py              # httpx async + rate limit
+│   │   └── browser.py           # playwright + stealth
+│   ├── seeders/
+│   │   ├── pagination.py
+│   │   ├── rss.py
+│   │   └── sitemap.py
+│   ├── extractors/
+│   │   ├── trafilatura_x.py
+│   │   └── readability_x.py
+│   ├── adapters/medium/
+│   │   ├── vendor/              # medium-parser (MIT, pinned commit)
+│   │   ├── client.py            # async wrapper, WARP support
+│   │   ├── extractor.py
+│   │   └── post_id.py           # URL → Medium post-id
+│   ├── filters/                 # lang, dedup, quality
+│   ├── sinks/                   # jsonl, parquet
+│   └── cli.py                   # typer
+├── configs/sources/
+│   ├── uber_engineering.yaml
+│   ├── grab.yaml
+│   ├── gojek.yaml
+│   ├── firstparty_engineering.yaml
+│   └── medium_graphql.yaml
+├── data/                        # JSONL output (gitignored)
+├── tests/
+│   ├── fixtures/                # snapshot HTML mỗi source
+│   └── test_extractor.py
+└── pyproject.toml</code></pre>
+    </section>
+
+    <section id="configs">
+      <h2>Source configs (declarative)</h2>
+      <p class="section-sub">Add source mới = thêm 1 file YAML. Không sửa core code.</p>
+
+      <h3>Uber — pagination + Cloudflare-friendly</h3>
+      <pre><code># configs/sources/uber_engineering.yaml
+name: uber_engineering
+fetcher: http
+seed:
+  strategy: pagination
+  template: "https://www.uber.com/us/en/blog/engineering/page/{n}/"
+  range: [1, 63]
+url_filter: '^https://www\.uber\.com/us/en/blog/[^/]+/$'
+rate_limit: { rps: 1, concurrency: 5 }
+extract:
+  parse_jsonld: true        # author, datePublished từ &lt;script type="application/ld+json"&gt;</code></pre>
+
+      <h3>Grab — RSS, dễ nhất</h3>
+      <pre><code># configs/sources/grab.yaml
+name: grab_engineering
+fetcher: http
+seed:
+  strategy: rss
+  url: "https://engineering.grab.com/feed.xml"
+url_filter: '^https://engineering\.grab\.com/[^/]+$'
+rate_limit: { rps: 2, concurrency: 5 }</code></pre>
+
+      <h3>Gojek — browser (Vercel challenge)</h3>
+      <pre><code># configs/sources/gojek.yaml
+name: gojek_engineering
+fetcher: browser
+seed:
+  strategy: pagination
+  template: "https://www.gojek.io/blog?page={n}"
+  range: [1, 99]              # auto-stop khi không còn link mới
+url_filter: '^https://www\.gojek\.io/blog/[^/]+'
+rate_limit: { rps: 0.5, concurrency: 2 }
+browser:
+  stealth: true
+  wait_until: networkidle</code></pre>
+    </section>
+
+    <section id="medium">
+      <h2>Medium adapter (opt-in, experimental)</h2>
+      <p class="section-sub">Medium <code>robots.txt</code> declare rõ <code>User-Agent: ClaudeBot Disallow: /</code>. Crawl chỉ khi user opt-in flag và hiểu rõ ToS.</p>
+
+      <div class="callout warn">
+        <strong>Lưu ý ToS &amp; pháp lý:</strong> Cả 3 phương án dưới cùng share rủi ro — Medium ToS prohibit API scraping; <code>robots.txt</code> explicit cấm AI crawlers. Code Freedium MIT-licensed nhưng không miễn trách nhiệm về <em>content</em> mà nó parse. Personal research &amp; RAG cá nhân: rủi ro thấp. Redistribute / commercial training: rủi ro thật, không khuyến nghị.
+      </div>
+
+      <table>
+        <thead>
+          <tr><th>#</th><th>Approach</th><th>Effort</th><th>Reliability</th><th>Maintenance</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>A</strong></td>
+            <td>Vendor <code>medium-parser</code> + gọi Medium GraphQL trực tiếp <span class="pill ok">đề xuất</span></td>
+            <td>1–1.5d</td>
+            <td>Cao (mình kiểm soát)</td>
+            <td>TB — Medium đổi API là gãy</td>
+          </tr>
+          <tr>
+            <td>B</td>
+            <td>Self-host Freedium docker-compose <code>min</code> profile</td>
+            <td>1.5d</td>
+            <td>Cao</td>
+            <td>Cao — 4 container + WARP</td>
+          </tr>
+          <tr>
+            <td>C</td>
+            <td>Route URL qua <code>freedium-mirror.cfd</code> runtime</td>
+            <td>0.3d</td>
+            <td>Thấp (mirror downtime)</td>
+            <td>Thấp nhưng brittle</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>Adapter design (Option A)</h3>
+      <pre><code># configs/sources/medium_graphql.yaml
+name: medium_graphql
+fetcher: medium_graphql            # custom adapter, vendored from Freedium
+seed:
+  strategy: hybrid
+  feeds:                           # public feeds for discovery
+    - "https://medium.com/feed/tag/distributed-systems"
+    - "https://medium.com/feed/tag/machine-learning"
+  follow_member_only: true
+url_filter: '^https://medium\.com/.*-[a-f0-9]{8,}$'
+extract:
+  via_graphql: true                # post-id từ URL → GraphQL → HTML → trafilatura
+  fallback_to_rss_content: true    # nếu GraphQL fail, dùng &lt;content:encoded&gt;
+network:
+  warp_proxy: optional             # cloudflare/cloudflared WARP
+  rate_limit: { rps: 0.3, concurrency: 1 }
+guards:
+  require_flag: --i-understand-medium-tos    # default OFF</code></pre>
+    </section>
+
+    <section id="roadmap">
+      <h2>Roadmap</h2>
+      <p class="section-sub">Đi từ dễ đến khó để validate core sớm. Total ~6.5 ngày người.</p>
+
+      <table>
+        <thead>
+          <tr><th>Phase</th><th>Deliverable</th><th>Time</th><th>Validates</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>P0</strong> Bootstrap</td><td>pyproject, ruff, pytest, schemas, source-config loader</td><td>0.5d</td><td>—</td></tr>
+          <tr><td><strong>P1</strong> Grab</td><td>RSS adapter + http fetcher + trafilatura → ~290 articles JSONL</td><td>1d</td><td>Pipeline core</td></tr>
+          <tr><td><strong>P2</strong> Uber</td><td>Pagination seeder + Cloudflare-friendly client → ~750 articles</td><td>1d</td><td>Pagination + JSON-LD</td></tr>
+          <tr><td><strong>P3</strong> Gojek</td><td>Browser fetcher (playwright + stealth) → bypass Vercel</td><td>1.5d</td><td>JS rendering</td></tr>
+          <tr><td><strong>P3.5</strong> First-party blogs</td><td>Netflix/Airbnb/Stripe/Cloudflare/Spotify… qua RSS</td><td>0.5d</td><td>Source scaling</td></tr>
+          <tr><td><strong>P4</strong> Medium GraphQL</td><td>Vendor medium-parser + WARP + opt-in flag</td><td>1.5d</td><td>Hardest target</td></tr>
+          <tr><td><strong>P5</strong> Polish</td><td>Resume, dedup, parquet, <code>--all</code>, metrics/logs</td><td>1d</td><td>Production-ready</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="risks">
+      <h2>Risks &amp; mitigations</h2>
+      <p class="section-sub">Crawler dài hạn — phải tính đến site đổi DOM, anti-bot upgrade, ToS thay đổi.</p>
+
+      <table>
+        <thead>
+          <tr><th>Risk</th><th>Likelihood</th><th>Mitigation</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Vercel siết bot challenge → Gojek block playwright</td><td>TB</td><td>Thêm <code>curl-impersonate</code> / <code>cycletls</code> fallback</td></tr>
+          <tr><td>Cloudflare Uber siết <code>__cf_bm</code></td><td>Thấp</td><td>Throttle 0.5 rps, rotate UA, dùng cookie session từ playwright</td></tr>
+          <tr><td>Medium đổi GraphQL schema</td><td>Cao</td><td>Pin <code>medium-parser</code> version, snapshot test, theo dõi Freedium upstream</td></tr>
+          <tr><td>Site đổi DOM</td><td>Cao</td><td><code>trafilatura</code> ổn định + <code>readability</code> fallback + selector hint trong YAML</td></tr>
+          <tr><td>IP bị ban khi bulk crawl</td><td>TB</td><td>Polite rate-limit, exponential backoff, optional WARP/proxy</td></tr>
+          <tr><td>Dataset chứa duplicate</td><td>TB</td><td>SHA-256 content_hash + MinHash near-dup ở P5</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="open">
+      <h2>Open questions cần chốt</h2>
+      <p class="section-sub">Trả lời 4 câu là scaffold P0 + P1 (Grab) ngay luôn.</p>
+
+      <ol>
+        <li><strong>Mục đích cuối</strong> của dataset: research cá nhân / RAG riêng, hay training/sản phẩm thương mại? → quyết định Medium adapter có nên implement không.</li>
+        <li><strong>Có server Linux + Docker</strong> để chạy WARP proxy (cho Medium adapter) không?</li>
+        <li><strong>Output mặc định</strong>: JSONL + Markdown? Hay parquet luôn?</li>
+        <li><strong>Phạm vi P1</strong>: chỉ Grab (validate pipeline), hay scaffold cho cả Uber/Gojek song song?</li>
+      </ol>
+    </section>
+
+    <footer>
+      <p>
+        Plan này được build dần qua nhiều bước verification thực tế (probe headers, robots.txt, repo inspect).
+        Tất cả số liệu site đều đã check live tại 2026-05-09.
+        Nguồn: <a href="https://github.com/unclecode/crawl4ai">crawl4ai</a> ·
+        <a href="https://github.com/firecrawl/firecrawl">firecrawl</a> ·
+        <a href="https://trafilatura.readthedocs.io/en/latest/evaluation.html">trafilatura benchmark</a> ·
+        <a href="https://github.com/Freedium-cfd/web">Freedium-cfd/web</a>.
+      </p>
+      <p style="margin-top:0.5rem; font-size:0.78rem;">
+        Generated for <code>star_crawl</code> · 2026-05-09 · v3
+      </p>
+    </footer>
+
+  </main>
+</div>
+
+</body>
+</html>
