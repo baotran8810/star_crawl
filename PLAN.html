@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>star_crawl — Plan v3</title>
+<title>star_crawl — Plan v4</title>
 <style>
 :root {
   --color-bg: oklch(98.5% 0.005 80);
@@ -421,6 +421,8 @@ footer a:hover { color: var(--color-accent); border-bottom-color: var(--color-ac
       <li><a href="#architecture">Architecture</a></li>
       <li><a href="#layout">Project Layout</a></li>
       <li><a href="#configs">Source Configs</a></li>
+      <li><a href="#database">Database Schema</a></li>
+      <li><a href="#webui">Web UI</a></li>
       <li><a href="#medium">Medium Adapter</a></li>
       <li><a href="#roadmap">Roadmap</a></li>
       <li><a href="#risks">Risks</a></li>
@@ -431,10 +433,11 @@ footer a:hover { color: var(--color-accent); border-bottom-color: var(--color-ac
   <main>
 
     <header class="hero">
-      <p class="eyebrow">PLAN v3 · 2026-05-09</p>
+      <p class="eyebrow">PLAN v4 · 2026-05-09</p>
       <h1><span class="accent">star_crawl</span> — universal web crawler with content extraction</h1>
       <p class="lede">
-        Một crawler đa nguồn, output LLM-ready markdown / parquet,
+        Một crawler đa nguồn, lưu vào SQLite, có web UI để duyệt &amp; search,
+        output LLM-ready markdown / parquet,
         targeting Uber · Grab · Gojek · Medium và tech blog ecosystem.
         Plug-in architecture: thêm source mới = thêm 1 file YAML.
       </p>
@@ -507,7 +510,9 @@ footer a:hover { color: var(--color-accent); border-bottom-color: var(--color-ac
         <div class="card"><h4>Fetch JS</h4><p><code>playwright</code> chromium + <code>playwright-stealth</code></p></div>
         <div class="card"><h4>Extract</h4><p><code>trafilatura</code> chính, <code>readability-lxml</code> fallback, <code>feedparser</code> RSS</p></div>
         <div class="card"><h4>Frontier</h4><p>SQLite — visited, queue, retry_count, fetched_at</p></div>
-        <div class="card"><h4>Sink</h4><p>JSONL → parquet (<code>pyarrow</code>)</p></div>
+        <div class="card"><h4>Article store</h4><p>SQLite (<code>articles.db</code>) + FTS5 cho full-text search</p></div>
+        <div class="card"><h4>Export</h4><p>JSONL → parquet (<code>pyarrow</code>) — derive từ DB</p></div>
+        <div class="card"><h4>Web UI</h4><p><code>FastAPI</code> + <code>Jinja2</code> + <code>HTMX</code> + <code>uvicorn</code></p></div>
         <div class="card"><h4>CLI</h4><p><code>typer</code> + <code>rich</code></p></div>
         <div class="card"><h4>Quality</h4><p><code>ruff</code> + <code>pytest</code> + <code>mypy</code></p></div>
         <div class="card"><h4>Medium (opt-in)</h4><p>Vendor <code>medium-parser</code> + WARP proxy optional</p></div>
@@ -612,7 +617,19 @@ feeds:
        Normalizer + Filter (lang, dedup hash, quality)
                         │
                         ▼
-       Sink (JSONL → parquet → optional Postgres / vector DB)
+   ┌────────── SQLite store (articles.db) ──────────┐
+   │  sources · articles · crawl_runs · articles_fts │
+   └────────────────────┬───────────────────────────┘
+                        │
+              ┌─────────┴──────────┐
+              ▼                    ▼
+       Export (JSONL/parquet)   Web UI (FastAPI + Jinja2 + HTMX)
+                                · /            dashboard
+                                · /sources     list nguồn
+                                · /sources/:n  bài theo nguồn
+                                · /articles/:id render markdown
+                                · /search?q=   FTS5 full-text
+                                · /runs        crawl history
 </div>
     </section>
 
@@ -626,6 +643,11 @@ feeds:
 │   │   ├── frontier.py          # SQLite queue + dedup
 │   │   ├── schemas.py           # Document, SourceConfig (pydantic)
 │   │   └── pipeline.py          # orchestrator
+│   ├── db/
+│   │   ├── schema.sql           # articles, sources, crawl_runs, FTS5
+│   │   ├── migrations/          # 001_init.sql, 002_*.sql ...
+│   │   ├── connection.py        # sqlite3 + WAL pragma
+│   │   └── repository.py        # ArticleRepo, SourceRepo, RunRepo
 │   ├── fetchers/
 │   │   ├── http.py              # httpx async + rate limit
 │   │   └── browser.py           # playwright + stealth
@@ -642,18 +664,33 @@ feeds:
 │   │   ├── extractor.py
 │   │   └── post_id.py           # URL → Medium post-id
 │   ├── filters/                 # lang, dedup, quality
-│   ├── sinks/                   # jsonl, parquet
-│   └── cli.py                   # typer
+│   ├── sinks/                   # sqlite (primary), jsonl, parquet
+│   ├── web/
+│   │   ├── app.py               # FastAPI app factory
+│   │   ├── routes/
+│   │   │   ├── dashboard.py     # GET /
+│   │   │   ├── sources.py       # GET /sources, /sources/{name}
+│   │   │   ├── articles.py      # GET /articles/{id}
+│   │   │   ├── search.py        # GET /search?q=
+│   │   │   └── runs.py          # GET /runs
+│   │   ├── templates/           # Jinja2 — base, dashboard, article, ...
+│   │   └── static/              # css, htmx.min.js
+│   └── cli.py                   # typer (crawl + serve)
 ├── configs/sources/
 │   ├── uber_engineering.yaml
 │   ├── grab.yaml
 │   ├── gojek.yaml
 │   ├── firstparty_engineering.yaml
 │   └── medium_graphql.yaml
-├── data/                        # JSONL output (gitignored)
+├── data/
+│   ├── articles.db              # SQLite primary store (gitignored)
+│   ├── frontier.db              # crawl queue (gitignored)
+│   └── exports/                 # JSONL / parquet (gitignored)
 ├── tests/
 │   ├── fixtures/                # snapshot HTML mỗi source
-│   └── test_extractor.py
+│   ├── test_extractor.py
+│   ├── test_repository.py
+│   └── test_web.py
 └── pyproject.toml</code></pre>
     </section>
 
@@ -697,6 +734,188 @@ rate_limit: { rps: 0.5, concurrency: 2 }
 browser:
   stealth: true
   wait_until: networkidle</code></pre>
+    </section>
+
+    <section id="database">
+      <h2>Database schema (SQLite)</h2>
+      <p class="section-sub">
+        SQLite làm primary store cho article đã extract. WAL mode để web UI đọc song song với crawler ghi. FTS5 cho full-text search. JSONL/parquet export derive từ DB — single source of truth.
+      </p>
+
+      <div class="callout">
+        <strong>Tại sao SQLite?</strong> Single-file, không cần server, FTS5 built-in, WAL cho concurrent reads. Khối lượng dự kiến ~5-10k articles — SQLite handle thoải mái. Nếu sau scale ra Postgres chỉ cần đổi <code>repository.py</code>.
+      </div>
+
+      <h3>Tables</h3>
+      <pre><code>-- nguồn crawl, 1-1 với configs/sources/*.yaml
+CREATE TABLE sources (
+  id            INTEGER PRIMARY KEY,
+  name          TEXT UNIQUE NOT NULL,        -- 'uber_engineering'
+  display_name  TEXT NOT NULL,                -- 'Uber Engineering'
+  homepage_url  TEXT NOT NULL,
+  config_path   TEXT NOT NULL,                -- 'configs/sources/uber_engineering.yaml'
+  enabled       INTEGER NOT NULL DEFAULT 1,
+  created_at    TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+-- bài đã crawl + extract
+CREATE TABLE articles (
+  id                INTEGER PRIMARY KEY,
+  source_id         INTEGER NOT NULL REFERENCES sources(id) ON DELETE CASCADE,
+  url               TEXT UNIQUE NOT NULL,
+  url_hash          TEXT NOT NULL,            -- SHA-256 dedup
+  content_hash      TEXT,                     -- SHA-256 body — near-dup
+  title             TEXT,
+  author            TEXT,
+  published_at      TEXT,                     -- ISO 8601
+  language          TEXT,                     -- 'en', 'vi', ...
+  excerpt           TEXT,
+  content_markdown  TEXT NOT NULL,            -- LLM-ready
+  content_html      TEXT,                     -- raw extracted, optional
+  word_count        INTEGER,
+  tags_json         TEXT,                     -- JSON array
+  metadata_json     TEXT,                     -- catch-all (JSON-LD, og:*, ...)
+  fetched_at        TEXT NOT NULL,
+  extracted_at      TEXT NOT NULL,
+  status            TEXT NOT NULL DEFAULT 'ok' -- 'ok' | 'failed' | 'skipped'
+);
+
+CREATE INDEX idx_articles_source_published
+  ON articles(source_id, published_at DESC);
+CREATE INDEX idx_articles_url_hash      ON articles(url_hash);
+CREATE INDEX idx_articles_content_hash  ON articles(content_hash);
+
+-- full-text search
+CREATE VIRTUAL TABLE articles_fts USING fts5(
+  title, excerpt, content_markdown,
+  content='articles', content_rowid='id',
+  tokenize='unicode61 remove_diacritics 2'
+);
+
+-- triggers để sync articles ↔ articles_fts
+CREATE TRIGGER articles_ai AFTER INSERT ON articles BEGIN
+  INSERT INTO articles_fts(rowid, title, excerpt, content_markdown)
+  VALUES (new.id, new.title, new.excerpt, new.content_markdown);
+END;
+CREATE TRIGGER articles_ad AFTER DELETE ON articles BEGIN
+  INSERT INTO articles_fts(articles_fts, rowid, title, excerpt, content_markdown)
+  VALUES ('delete', old.id, old.title, old.excerpt, old.content_markdown);
+END;
+CREATE TRIGGER articles_au AFTER UPDATE ON articles BEGIN
+  INSERT INTO articles_fts(articles_fts, rowid, title, excerpt, content_markdown)
+  VALUES ('delete', old.id, old.title, old.excerpt, old.content_markdown);
+  INSERT INTO articles_fts(rowid, title, excerpt, content_markdown)
+  VALUES (new.id, new.title, new.excerpt, new.content_markdown);
+END;
+
+-- crawl history cho dashboard
+CREATE TABLE crawl_runs (
+  id                  INTEGER PRIMARY KEY,
+  source_id           INTEGER NOT NULL REFERENCES sources(id),
+  started_at          TEXT NOT NULL,
+  finished_at         TEXT,
+  status              TEXT NOT NULL,           -- 'running' | 'success' | 'failed' | 'cancelled'
+  pages_fetched       INTEGER NOT NULL DEFAULT 0,
+  articles_new        INTEGER NOT NULL DEFAULT 0,
+  articles_updated    INTEGER NOT NULL DEFAULT 0,
+  errors              INTEGER NOT NULL DEFAULT 0,
+  error_message       TEXT
+);
+
+CREATE INDEX idx_runs_source_started ON crawl_runs(source_id, started_at DESC);
+
+-- pragmas khi mở connection
+PRAGMA journal_mode = WAL;       -- concurrent reads
+PRAGMA synchronous  = NORMAL;
+PRAGMA foreign_keys = ON;
+PRAGMA busy_timeout = 5000;</code></pre>
+
+      <h3>Migration strategy</h3>
+      <ul>
+        <li><code>db/migrations/NNN_*.sql</code> — fwd-only, chạy theo thứ tự, ghi version vào bảng <code>schema_version</code>.</li>
+        <li>Không dùng Alembic — overkill cho SQLite single-file. Tự viết 30 dòng <code>migrate.py</code>.</li>
+        <li>Seed <code>sources</code> từ <code>configs/sources/*.yaml</code> khi bắt đầu crawl run.</li>
+      </ul>
+    </section>
+
+    <section id="webui">
+      <h2>Web UI</h2>
+      <p class="section-sub">FastAPI + Jinja2 + HTMX — server-rendered, không cần build step. Cùng Python với crawler nên dev đơn stack. HTMX cho pagination + search live update mà không viết JS.</p>
+
+      <h3>Routes</h3>
+      <table>
+        <thead>
+          <tr><th>Method</th><th>Path</th><th>Mô tả</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>GET</td><td><code>/</code></td><td>Dashboard — tổng số articles, runs gần nhất, top sources</td></tr>
+          <tr><td>GET</td><td><code>/sources</code></td><td>List tất cả nguồn + count + last_crawled_at</td></tr>
+          <tr><td>GET</td><td><code>/sources/{name}</code></td><td>Article list theo nguồn, filter date/lang, paginate (HTMX)</td></tr>
+          <tr><td>GET</td><td><code>/articles/{id}</code></td><td>Detail — render <code>content_markdown</code> qua <code>markdown-it-py</code></td></tr>
+          <tr><td>GET</td><td><code>/search?q=</code></td><td>FTS5 search across title + content, snippet highlight</td></tr>
+          <tr><td>GET</td><td><code>/runs</code></td><td>Crawl history — status, duration, articles_new, errors</td></tr>
+          <tr><td>GET</td><td><code>/runs/{id}</code></td><td>Run detail — error log, articles của run đó</td></tr>
+          <tr><td>GET</td><td><code>/healthz</code></td><td>Health check (DB ping)</td></tr>
+        </tbody>
+      </table>
+
+      <h3>UI scope (theo yêu cầu)</h3>
+      <div class="cards">
+        <div class="card">
+          <h4>Sources view</h4>
+          <p>Card grid mỗi nguồn: tên, count, last crawl, status pill. Click → article list.</p>
+        </div>
+        <div class="card">
+          <h4>Articles per source</h4>
+          <p>Table title / author / published_at / lang / word_count. Filter + sort. HTMX pagination.</p>
+        </div>
+        <div class="card">
+          <h4>Article detail</h4>
+          <p>Render markdown, có metadata sidebar (URL gốc, fetched_at, tags, JSON-LD raw).</p>
+        </div>
+        <div class="card">
+          <h4>Crawl status</h4>
+          <p>Dashboard + <code>/runs</code>: live progress (HTMX poll 2s khi status=running), error log.</p>
+        </div>
+        <div class="card">
+          <h4>Search (FTS5)</h4>
+          <p>Box ở header, kết quả có snippet highlight. Filter theo source.</p>
+        </div>
+        <div class="card">
+          <h4>Read-only</h4>
+          <p>UI chỉ đọc, không triểu crawl từ browser — crawl chạy qua CLI <code>typer</code>.</p>
+        </div>
+      </div>
+
+      <h3>Wireframe (dashboard)</h3>
+      <div class="diagram">┌─ star_crawl ────────────────────────── [search box] ───┐
+│  Dashboard · Sources · Articles · Runs                       │
+├───────────────────────────────────────────────────────────┤
+│  TOTAL                                                       │
+│   1,247 articles    7 sources    last run: 4m ago [success]  │
+├─ Sources ────────────────────────────────────────────────────┤
+│  ┌───────────────┐ ┌───────────────┐ ┌───────────────┐              │
+│  │ Uber Eng.     │ │ Grab Eng.     │ │ Gojek         │              │
+│  │ 742 articles  │ │ 289 articles  │ │  92 articles  │              │
+│  │ 4m ago [ok]   │ │ 1h ago [ok]   │ │ 2h ago [warn] │              │
+│  └───────────────┘ └───────────────┘ └───────────────┘              │
+├─ Recent runs ─────────────────────────────────────────────┤
+│  uber_engineering   2026-05-09 14:20  3m12s  +12 articles    │
+│  grab_engineering   2026-05-09 13:05  0m48s  +3 articles      │
+│  gojek              2026-05-09 12:30  failed (cf challenge)   │
+└───────────────────────────────────────────────────────────┘</div>
+
+      <h3>CLI hook</h3>
+      <pre><code># start web UI (read-only browse, muốn phát triển thì tự chạy uvicorn)
+star-crawl serve --host 127.0.0.1 --port 8000
+
+# crawl chạy tách riêng qua CLI
+star-crawl run grab_engineering
+star-crawl run --all</code></pre>
+
+      <div class="callout warn">
+        <strong>Security:</strong> Mặc định bind <code>127.0.0.1</code>. Nếu expose ra mạng phải thêm basic auth (env <code>STAR_CRAWL_AUTH=user:pass</code>) vì DB có thể chứa content có bản quyền.
+      </div>
     </section>
 
     <section id="medium">
@@ -759,20 +978,22 @@ guards:
 
     <section id="roadmap">
       <h2>Roadmap</h2>
-      <p class="section-sub">Đi từ dễ đến khó để validate core sớm. Total ~6.5 ngày người.</p>
+      <p class="section-sub">Đi từ dễ đến khó để validate core sớm. Total ~9 ngày người (đã thêm DB + Web UI).</p>
 
       <table>
         <thead>
           <tr><th>Phase</th><th>Deliverable</th><th>Time</th><th>Validates</th></tr>
         </thead>
         <tbody>
-          <tr><td><strong>P0</strong> Bootstrap</td><td>pyproject, ruff, pytest, schemas, source-config loader</td><td>0.5d</td><td>—</td></tr>
-          <tr><td><strong>P1</strong> Grab</td><td>RSS adapter + http fetcher + trafilatura → ~290 articles JSONL</td><td>1d</td><td>Pipeline core</td></tr>
+          <tr><td><strong>P0</strong> Bootstrap</td><td>pyproject, ruff, pytest, schemas, source-config loader, <strong>SQLite migrations</strong></td><td>0.7d</td><td>—</td></tr>
+          <tr><td><strong>P1</strong> Grab</td><td>RSS adapter + http fetcher + trafilatura → <strong>insert vào <code>articles.db</code></strong> (~290 articles)</td><td>1d</td><td>Pipeline core + DB write</td></tr>
           <tr><td><strong>P2</strong> Uber</td><td>Pagination seeder + Cloudflare-friendly client → ~750 articles</td><td>1d</td><td>Pagination + JSON-LD</td></tr>
           <tr><td><strong>P3</strong> Gojek</td><td>Browser fetcher (playwright + stealth) → bypass Vercel</td><td>1.5d</td><td>JS rendering</td></tr>
           <tr><td><strong>P3.5</strong> First-party blogs</td><td>Netflix/Airbnb/Stripe/Cloudflare/Spotify… qua RSS</td><td>0.5d</td><td>Source scaling</td></tr>
           <tr><td><strong>P4</strong> Medium GraphQL</td><td>Vendor medium-parser + WARP + opt-in flag</td><td>1.5d</td><td>Hardest target</td></tr>
-          <tr><td><strong>P5</strong> Polish</td><td>Resume, dedup, parquet, <code>--all</code>, metrics/logs</td><td>1d</td><td>Production-ready</td></tr>
+          <tr><td><strong>P5</strong> Polish</td><td>Resume, dedup, parquet export, <code>--all</code>, metrics/logs</td><td>1d</td><td>Production-ready</td></tr>
+          <tr><td><strong>P6</strong> Web UI v1</td><td>FastAPI + Jinja2: dashboard, sources, articles list, article detail</td><td>1d</td><td>Browse</td></tr>
+          <tr><td><strong>P7</strong> Web UI v2</td><td>HTMX pagination + FTS5 search + crawl status (poll runs)</td><td>0.8d</td><td>Search + observability</td></tr>
         </tbody>
       </table>
     </section>
@@ -818,7 +1039,7 @@ guards:
         <a href="https://github.com/Freedium-cfd/web">Freedium-cfd/web</a>.
       </p>
       <p style="margin-top:0.5rem; font-size:0.78rem;">
-        Generated for <code>star_crawl</code> · 2026-05-09 · v3
+        Generated for <code>star_crawl</code> · 2026-05-09 · v4 (added SQLite store + Web UI)
       </p>
     </footer>
 
