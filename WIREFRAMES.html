@@ -1,0 +1,1344 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>star_crawl — Wireframes v1</title>
+<style>
+:root {
+  --bg: oklch(98.5% 0.005 80);
+  --surface: oklch(100% 0 0);
+  --text: oklch(20% 0.01 80);
+  --muted: oklch(50% 0.01 80);
+  --faint: oklch(72% 0.008 80);
+  --border: oklch(90% 0.005 80);
+  --border-strong: oklch(82% 0.008 80);
+  --accent: oklch(52% 0.18 250);
+  --accent-soft: oklch(95% 0.04 250);
+  --warn: oklch(60% 0.16 50);
+  --warn-soft: oklch(96% 0.04 60);
+  --ok: oklch(55% 0.15 150);
+  --ok-soft: oklch(96% 0.04 150);
+  --skel: oklch(92% 0.005 80);
+  --skel-strong: oklch(86% 0.005 80);
+  --code-bg: oklch(96% 0.005 80);
+
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-serif: ui-serif, Georgia, "Times New Roman", serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+
+  --radius: 10px;
+  --radius-sm: 6px;
+  --shadow-sm: 0 1px 2px oklch(20% 0.01 80 / 0.04), 0 1px 1px oklch(20% 0.01 80 / 0.03);
+  --shadow-md: 0 6px 24px oklch(20% 0.01 80 / 0.08), 0 1px 2px oklch(20% 0.01 80 / 0.04);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: oklch(16% 0.01 260);
+    --surface: oklch(20% 0.012 260);
+    --text: oklch(94% 0.01 260);
+    --muted: oklch(68% 0.015 260);
+    --faint: oklch(48% 0.012 260);
+    --border: oklch(28% 0.012 260);
+    --border-strong: oklch(34% 0.012 260);
+    --accent: oklch(72% 0.16 250);
+    --accent-soft: oklch(28% 0.06 250);
+    --warn: oklch(78% 0.14 60);
+    --warn-soft: oklch(30% 0.06 60);
+    --ok: oklch(75% 0.14 150);
+    --ok-soft: oklch(28% 0.06 150);
+    --skel: oklch(26% 0.012 260);
+    --skel-strong: oklch(32% 0.012 260);
+    --code-bg: oklch(24% 0.012 260);
+  }
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--text);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+}
+
+.doc {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 4rem 1.5rem 6rem;
+}
+
+.doc-header {
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 2rem;
+  margin-bottom: 3rem;
+}
+.doc-header .eyebrow {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin: 0 0 0.75rem;
+}
+.doc-header h1 {
+  font-family: var(--font-serif);
+  font-size: clamp(2rem, 1.5rem + 2vw, 3rem);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.05;
+  margin: 0 0 0.75rem;
+}
+.doc-header h1 em { font-style: italic; color: var(--accent); }
+.doc-header p {
+  margin: 0;
+  color: var(--muted);
+  max-width: 60ch;
+}
+
+.frame-block {
+  margin: 5rem 0;
+}
+
+.frame-meta {
+  display: flex;
+  align-items: baseline;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+.frame-meta .num {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--accent);
+  letter-spacing: 0.1em;
+}
+.frame-meta h2 {
+  font-family: var(--font-serif);
+  font-size: 1.6rem;
+  font-weight: 600;
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+.frame-meta .route {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--muted);
+  background: var(--code-bg);
+  padding: 0.15em 0.55em;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+}
+.frame-desc {
+  color: var(--muted);
+  margin: 0 0 1.25rem;
+  max-width: 70ch;
+}
+
+/* Browser chrome */
+.frame {
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+}
+.chrome {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.7rem 0.9rem;
+  background: var(--code-bg);
+  border-bottom: 1px solid var(--border);
+}
+.chrome .dots { display: flex; gap: 0.35rem; }
+.chrome .dots span {
+  width: 11px; height: 11px;
+  border-radius: 50%;
+  background: var(--skel-strong);
+}
+.chrome .url {
+  flex: 1;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--muted);
+  background: var(--surface);
+  padding: 0.3rem 0.7rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  text-align: center;
+}
+.viewport {
+  background: var(--bg);
+  min-height: 360px;
+  padding: 0;
+}
+
+/* App shell inside frame */
+.app {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  min-height: 100%;
+}
+.app-nav {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  padding: 0.85rem 1.25rem;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+.app-logo {
+  font-family: var(--font-serif);
+  font-size: 1.05rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.app-logo em { color: var(--accent); font-style: italic; }
+.app-nav .links {
+  display: flex;
+  gap: 1.1rem;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+.app-nav .links a { color: inherit; text-decoration: none; }
+.app-nav .links a.active { color: var(--text); font-weight: 500; }
+.app-nav .search-box {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.4rem 0.7rem;
+  font-size: 0.82rem;
+  color: var(--muted);
+  min-width: 240px;
+}
+.app-nav .search-box::before {
+  content: "⌕"; color: var(--faint);
+}
+.app-nav .search-box .placeholder { flex: 1; }
+.app-nav .search-box .kbd {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  background: var(--surface);
+  padding: 0.1em 0.45em;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+}
+
+.app-body { padding: 1.5rem 1.5rem 2rem; }
+
+/* H1 inside app */
+.page-title {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  margin: 0 0 0.4rem;
+}
+.page-title h3 {
+  font-family: var(--font-serif);
+  font-size: 1.35rem;
+  font-weight: 600;
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+.page-title .crumb {
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+.page-sub {
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin: 0 0 1.5rem;
+}
+
+/* Stat strip */
+.stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+.stat {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1rem 1.1rem;
+}
+.stat .label {
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 0.4rem;
+}
+.stat .value {
+  font-family: var(--font-serif);
+  font-size: 1.65rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+.stat .value small {
+  font-size: 0.7rem;
+  font-family: var(--font-sans);
+  font-weight: 400;
+  color: var(--muted);
+  margin-left: 0.4rem;
+  letter-spacing: 0;
+}
+
+.section-h {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin: 2rem 0 0.8rem;
+}
+.section-h h4 {
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin: 0;
+}
+.section-h .more {
+  font-size: 0.78rem;
+  color: var(--accent);
+}
+
+/* Source cards (dashboard + sources page) */
+.src-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 1rem;
+}
+.src-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1rem 1.1rem;
+}
+.src-card .top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+.src-card .name { font-weight: 600; font-size: 0.95rem; }
+.src-card .count {
+  font-family: var(--font-serif);
+  font-size: 1.5rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+.src-card .count small { font-size: 0.65rem; color: var(--muted); font-family: var(--font-sans); margin-left: 0.3rem; }
+.src-card .meta {
+  font-size: 0.75rem;
+  color: var(--muted);
+  display: flex;
+  justify-content: space-between;
+  margin-top: 0.5rem;
+}
+
+.pill {
+  display: inline-block;
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.04em;
+  background: var(--accent-soft);
+  color: var(--accent);
+  border: 1px solid color-mix(in oklch, var(--accent) 20%, transparent);
+}
+.pill.warn { background: var(--warn-soft); color: var(--warn); border-color: color-mix(in oklch, var(--warn) 20%, transparent); }
+.pill.ok   { background: var(--ok-soft);   color: var(--ok);   border-color: color-mix(in oklch, var(--ok) 20%, transparent); }
+.pill.muted { background: var(--code-bg); color: var(--muted); border-color: var(--border); }
+
+/* Tables */
+table.list {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+table.list thead { background: var(--code-bg); }
+table.list th, table.list td {
+  text-align: left;
+  padding: 0.55rem 0.85rem;
+  border-bottom: 1px solid var(--border);
+}
+table.list th {
+  font-size: 0.7rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-weight: 500;
+}
+table.list tbody tr:last-child td { border-bottom: none; }
+table.list tbody tr:hover { background: var(--code-bg); }
+table.list td.title { font-weight: 500; max-width: 38ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+table.list td.mono { font-family: var(--font-mono); font-size: 0.78rem; color: var(--muted); }
+table.list td.num { font-variant-numeric: tabular-nums; color: var(--muted); }
+
+/* Filter bar */
+.filterbar {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+  align-items: center;
+}
+.filterbar .chip {
+  padding: 0.3rem 0.7rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+.filterbar .chip.on { background: var(--accent-soft); color: var(--accent); border-color: color-mix(in oklch, var(--accent) 25%, transparent); }
+.filterbar .grow { flex: 1; }
+.filterbar .sort {
+  font-size: 0.78rem;
+  color: var(--muted);
+  background: var(--code-bg);
+  padding: 0.3rem 0.7rem;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+}
+
+/* Pagination */
+.pagi {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 1.25rem;
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+.pagi .pg {
+  min-width: 28px;
+  text-align: center;
+  padding: 0.25rem 0.55rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+}
+.pagi .pg.on { background: var(--accent); color: white; border-color: var(--accent); }
+
+/* Article detail */
+.article-grid {
+  display: grid;
+  grid-template-columns: 1fr 260px;
+  gap: 2rem;
+}
+@media (max-width: 720px) {
+  .article-grid { grid-template-columns: 1fr; }
+}
+.article-body h5 {
+  font-family: var(--font-serif);
+  font-size: 1.55rem;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  line-height: 1.2;
+  margin: 0 0 0.5rem;
+}
+.article-body .byline {
+  font-size: 0.8rem;
+  color: var(--muted);
+  margin-bottom: 1.25rem;
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+/* Skeleton bars to indicate body */
+.skel-line { height: 11px; background: var(--skel); border-radius: 4px; margin: 0.55rem 0; }
+.skel-line.s90 { width: 92%; }
+.skel-line.s80 { width: 80%; }
+.skel-line.s70 { width: 70%; }
+.skel-line.s60 { width: 60%; }
+.skel-line.s40 { width: 40%; }
+.skel-line.tall { height: 16px; background: var(--skel-strong); width: 50%; margin-top: 1.5rem; }
+.skel-block {
+  background: var(--code-bg);
+  border-left: 3px solid var(--accent);
+  border-radius: 4px;
+  padding: 0.9rem;
+  margin: 1rem 0;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+aside.meta-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.1rem;
+  font-size: 0.82rem;
+  height: fit-content;
+}
+aside.meta-panel h6 {
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin: 0 0 0.5rem;
+}
+aside.meta-panel dl { margin: 0 0 1rem; }
+aside.meta-panel dt {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  margin-top: 0.6rem;
+}
+aside.meta-panel dd {
+  margin: 0.15rem 0 0;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  word-break: break-all;
+}
+
+/* Search results */
+.search-result {
+  padding: 1rem 0;
+  border-bottom: 1px solid var(--border);
+}
+.search-result:last-child { border-bottom: none; }
+.search-result .src {
+  display: flex;
+  gap: 0.5rem;
+  font-size: 0.72rem;
+  color: var(--muted);
+  margin-bottom: 0.25rem;
+  font-family: var(--font-mono);
+}
+.search-result h6 {
+  font-family: var(--font-serif);
+  font-size: 1.02rem;
+  font-weight: 600;
+  margin: 0 0 0.3rem;
+  letter-spacing: -0.005em;
+}
+.search-result .snip {
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin: 0;
+}
+.search-result .hit {
+  background: color-mix(in oklch, var(--accent) 25%, transparent);
+  color: var(--text);
+  padding: 0 2px;
+  border-radius: 3px;
+}
+
+/* Run timeline */
+.run-row {
+  display: grid;
+  grid-template-columns: 160px 1fr auto;
+  gap: 1rem;
+  align-items: center;
+  padding: 0.7rem 1rem;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.85rem;
+}
+.run-row:last-child { border-bottom: none; }
+.run-row .ts { font-family: var(--font-mono); font-size: 0.78rem; color: var(--muted); }
+.run-row .name { font-weight: 500; }
+.run-row .meta { color: var(--muted); font-size: 0.78rem; }
+.run-row.live {
+  background: linear-gradient(90deg, var(--accent-soft), transparent 60%);
+}
+
+/* Note callout */
+.note {
+  margin-top: 1rem;
+  padding: 0.85rem 1rem;
+  background: var(--accent-soft);
+  border-left: 3px solid var(--accent);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  font-size: 0.84rem;
+  color: var(--text);
+}
+.note strong { color: var(--accent); }
+.note code {
+  font-family: var(--font-mono);
+  font-size: 0.82em;
+  background: var(--surface);
+  padding: 0.05em 0.35em;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+}
+
+/* Progress bar (run live) */
+.progress {
+  height: 6px;
+  background: var(--skel);
+  border-radius: 999px;
+  overflow: hidden;
+  margin: 0.5rem 0;
+}
+.progress > span {
+  display: block;
+  height: 100%;
+  width: 64%;
+  background: var(--accent);
+  border-radius: inherit;
+}
+
+footer.doc-footer {
+  margin-top: 6rem;
+  padding-top: 2rem;
+  border-top: 1px solid var(--border);
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+</style>
+</head>
+<body>
+
+<div class="doc">
+
+  <header class="doc-header">
+    <p class="eyebrow">WIREFRAMES v1 · 2026-05-09</p>
+    <h1>star_crawl — <em>Web UI</em> reference</h1>
+    <p>Low-fi visual wireframes cho 7 màn hình chính của Web UI v1+v2. Mục đích: chốt layout + interaction trước khi viết Jinja2 templates. Read-only; crawl chạy qua CLI tách riêng.</p>
+  </header>
+
+  <!-- ====================== 1. DASHBOARD ====================== -->
+  <section class="frame-block">
+    <div class="frame-meta">
+      <span class="num">01</span>
+      <h2>Dashboard</h2>
+      <span class="route">GET /</span>
+    </div>
+    <p class="frame-desc">Landing page. Stat strip (totals) → source cards grid → recent runs. Zero-click overview cho user vừa mở.</p>
+
+    <div class="frame">
+      <div class="chrome">
+        <div class="dots"><span></span><span></span><span></span></div>
+        <div class="url">localhost:8000/</div>
+      </div>
+      <div class="viewport">
+        <div class="app">
+          <nav class="app-nav">
+            <div class="app-logo">star_<em>crawl</em></div>
+            <div class="links">
+              <a href="#" class="active">Dashboard</a>
+              <a href="#">Sources</a>
+              <a href="#">Articles</a>
+              <a href="#">Runs</a>
+            </div>
+            <div class="search-box">
+              <span class="placeholder">Search title or content…</span>
+              <span class="kbd">/</span>
+            </div>
+          </nav>
+          <div class="app-body">
+            <div class="page-title"><h3>Overview</h3></div>
+            <p class="page-sub">Tổng quan corpus — cập nhật mỗi crawl run.</p>
+
+            <div class="stats">
+              <div class="stat"><div class="label">Total articles</div><div class="value">1,247</div></div>
+              <div class="stat"><div class="label">Sources</div><div class="value">7</div></div>
+              <div class="stat"><div class="label">Last run</div><div class="value">4m <small>ago</small></div></div>
+              <div class="stat"><div class="label">This week</div><div class="value">+128 <small>articles</small></div></div>
+            </div>
+
+            <div class="section-h"><h4>Sources</h4><a class="more" href="#">All →</a></div>
+            <div class="src-grid">
+              <div class="src-card">
+                <div class="top"><span class="name">Uber Engineering</span><span class="pill ok">ok</span></div>
+                <div class="count">742<small>articles</small></div>
+                <div class="meta"><span>4m ago</span><span>SSR</span></div>
+              </div>
+              <div class="src-card">
+                <div class="top"><span class="name">Grab Engineering</span><span class="pill ok">ok</span></div>
+                <div class="count">289<small>articles</small></div>
+                <div class="meta"><span>1h ago</span><span>RSS</span></div>
+              </div>
+              <div class="src-card">
+                <div class="top"><span class="name">Gojek</span><span class="pill warn">cf-block</span></div>
+                <div class="count">92<small>articles</small></div>
+                <div class="meta"><span>2h ago</span><span>browser</span></div>
+              </div>
+              <div class="src-card">
+                <div class="top"><span class="name">Netflix Tech</span><span class="pill ok">ok</span></div>
+                <div class="count">64<small>articles</small></div>
+                <div class="meta"><span>6h ago</span><span>RSS</span></div>
+              </div>
+            </div>
+
+            <div class="section-h"><h4>Recent runs</h4><a class="more" href="#">All →</a></div>
+            <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;">
+              <div class="run-row">
+                <span class="ts">2026-05-09 14:20</span>
+                <div><span class="name">uber_engineering</span> <span class="pill ok">success</span></div>
+                <span class="meta">3m12s · +12 articles</span>
+              </div>
+              <div class="run-row">
+                <span class="ts">2026-05-09 13:05</span>
+                <div><span class="name">grab_engineering</span> <span class="pill ok">success</span></div>
+                <span class="meta">0m48s · +3 articles</span>
+              </div>
+              <div class="run-row">
+                <span class="ts">2026-05-09 12:30</span>
+                <div><span class="name">gojek</span> <span class="pill warn">failed</span></div>
+                <span class="meta">cf challenge</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="note">
+      <strong>Notes —</strong> Search box global ở header (phím <code>/</code> focus). Source card click → <code>/sources/{name}</code>. Recent runs click → <code>/runs/{id}</code>. Stats là materialized view của <code>articles</code> table.
+    </div>
+  </section>
+
+  <!-- ====================== 2. SOURCES LIST ====================== -->
+  <section class="frame-block">
+    <div class="frame-meta">
+      <span class="num">02</span>
+      <h2>Sources list</h2>
+      <span class="route">GET /sources</span>
+    </div>
+    <p class="frame-desc">Tất cả nguồn cấu hình trong <code>configs/sources/*.yaml</code>. Cùng layout grid như dashboard nhưng full width.</p>
+
+    <div class="frame">
+      <div class="chrome">
+        <div class="dots"><span></span><span></span><span></span></div>
+        <div class="url">localhost:8000/sources</div>
+      </div>
+      <div class="viewport">
+        <div class="app">
+          <nav class="app-nav">
+            <div class="app-logo">star_<em>crawl</em></div>
+            <div class="links">
+              <a href="#">Dashboard</a>
+              <a href="#" class="active">Sources</a>
+              <a href="#">Articles</a>
+              <a href="#">Runs</a>
+            </div>
+            <div class="search-box"><span class="placeholder">Search…</span><span class="kbd">/</span></div>
+          </nav>
+          <div class="app-body">
+            <div class="page-title"><h3>Sources</h3></div>
+            <p class="page-sub">7 nguồn · 1,247 articles total.</p>
+
+            <div class="filterbar">
+              <span class="chip on">All</span>
+              <span class="chip">Engineering</span>
+              <span class="chip">Data/ML</span>
+              <span class="chip">Security</span>
+              <span class="grow"></span>
+              <span class="sort">Sort: count ↓</span>
+            </div>
+
+            <div class="src-grid">
+              <div class="src-card">
+                <div class="top"><span class="name">Uber Engineering</span><span class="pill ok">ok</span></div>
+                <div class="count">742<small>articles</small></div>
+                <div class="meta"><span>SSR · cloudflare</span><span>4m ago</span></div>
+              </div>
+              <div class="src-card">
+                <div class="top"><span class="name">Grab Engineering</span><span class="pill ok">ok</span></div>
+                <div class="count">289<small>articles</small></div>
+                <div class="meta"><span>RSS · github pages</span><span>1h ago</span></div>
+              </div>
+              <div class="src-card">
+                <div class="top"><span class="name">Gojek</span><span class="pill warn">cf-block</span></div>
+                <div class="count">92<small>articles</small></div>
+                <div class="meta"><span>browser · vercel</span><span>2h ago</span></div>
+              </div>
+              <div class="src-card">
+                <div class="top"><span class="name">Netflix Tech</span><span class="pill ok">ok</span></div>
+                <div class="count">64<small>articles</small></div>
+                <div class="meta"><span>RSS</span><span>6h ago</span></div>
+              </div>
+              <div class="src-card">
+                <div class="top"><span class="name">Stripe Eng.</span><span class="pill ok">ok</span></div>
+                <div class="count">37<small>articles</small></div>
+                <div class="meta"><span>RSS</span><span>6h ago</span></div>
+              </div>
+              <div class="src-card">
+                <div class="top"><span class="name">Cloudflare Blog</span><span class="pill ok">ok</span></div>
+                <div class="count">19<small>articles</small></div>
+                <div class="meta"><span>RSS</span><span>6h ago</span></div>
+              </div>
+              <div class="src-card">
+                <div class="top"><span class="name">Medium GraphQL</span><span class="pill muted">opt-in</span></div>
+                <div class="count">4<small>articles</small></div>
+                <div class="meta"><span>experimental</span><span>—</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="note">
+      <strong>Notes —</strong> Filter chips = category từ YAML. Sort options: count, last_crawled, name. Card click → <code>/sources/{name}</code>. Pill <code>cf-block</code> = last run failed do anti-bot; user click vào sẽ thấy run detail có error.
+    </div>
+  </section>
+
+  <!-- ====================== 3. SOURCE DETAIL ====================== -->
+  <section class="frame-block">
+    <div class="frame-meta">
+      <span class="num">03</span>
+      <h2>Articles per source</h2>
+      <span class="route">GET /sources/{name}</span>
+    </div>
+    <p class="frame-desc">Table view với HTMX pagination. Filter bar trên, table giữa, pagi dưới. Row click → article detail.</p>
+
+    <div class="frame">
+      <div class="chrome">
+        <div class="dots"><span></span><span></span><span></span></div>
+        <div class="url">localhost:8000/sources/uber_engineering</div>
+      </div>
+      <div class="viewport">
+        <div class="app">
+          <nav class="app-nav">
+            <div class="app-logo">star_<em>crawl</em></div>
+            <div class="links">
+              <a href="#">Dashboard</a>
+              <a href="#" class="active">Sources</a>
+              <a href="#">Articles</a>
+              <a href="#">Runs</a>
+            </div>
+            <div class="search-box"><span class="placeholder">Search in this source…</span><span class="kbd">/</span></div>
+          </nav>
+          <div class="app-body">
+            <div class="page-title">
+              <span class="crumb">Sources /</span>
+              <h3>Uber Engineering</h3>
+            </div>
+            <p class="page-sub">742 articles · last crawled 4m ago · pagination via SSR + JSON-LD metadata</p>
+
+            <div class="filterbar">
+              <span class="chip on">All</span>
+              <span class="chip">Backend</span>
+              <span class="chip">Data/ML</span>
+              <span class="chip">Mobile</span>
+              <span class="chip">Security</span>
+              <span class="chip">Web</span>
+              <span class="grow"></span>
+              <span class="sort">Date ↓</span>
+              <span class="sort">EN only</span>
+            </div>
+
+            <table class="list">
+              <thead>
+                <tr>
+                  <th>Title</th>
+                  <th>Author</th>
+                  <th>Published</th>
+                  <th>Lang</th>
+                  <th>Words</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="title">Zero-Growth Stack: Scaling Logistics with Constant Headcount</td>
+                  <td>L. Nguyen</td>
+                  <td class="mono">2026-05-08</td>
+                  <td><span class="pill muted">en</span></td>
+                  <td class="num">3,420</td>
+                </tr>
+                <tr>
+                  <td class="title">Five Layers of Cloud at Uber Scale</td>
+                  <td>P. Sharma</td>
+                  <td class="mono">2026-05-06</td>
+                  <td><span class="pill muted">en</span></td>
+                  <td class="num">2,158</td>
+                </tr>
+                <tr>
+                  <td class="title">Ansible Automation Powers Fleet Provisioning</td>
+                  <td>M. Tran</td>
+                  <td class="mono">2026-05-04</td>
+                  <td><span class="pill muted">en</span></td>
+                  <td class="num">1,802</td>
+                </tr>
+                <tr>
+                  <td class="title">Bank-Grade Privacy in Driver Onboarding</td>
+                  <td>S. Lee</td>
+                  <td class="mono">2026-05-02</td>
+                  <td><span class="pill muted">en</span></td>
+                  <td class="num">2,940</td>
+                </tr>
+                <tr>
+                  <td class="title">From REST to gRPC: Learnings from Migrating 200 Services</td>
+                  <td>A. Kumar</td>
+                  <td class="mono">2026-04-30</td>
+                  <td><span class="pill muted">en</span></td>
+                  <td class="num">4,107</td>
+                </tr>
+                <tr>
+                  <td class="title">Realtime Routing Costs: A Postmortem</td>
+                  <td>J. Patel</td>
+                  <td class="mono">2026-04-28</td>
+                  <td><span class="pill muted">en</span></td>
+                  <td class="num">2,322</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <div class="pagi">
+              <span class="pg">‹</span>
+              <span class="pg">1</span>
+              <span class="pg on">2</span>
+              <span class="pg">3</span>
+              <span class="pg">4</span>
+              <span>…</span>
+              <span class="pg">37</span>
+              <span class="pg">›</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="note">
+      <strong>Notes —</strong> Pagination dùng HTMX <code>hx-get="/sources/uber_engineering?page=3" hx-target="tbody"</code>: chỉ swap <code>tbody</code>, header + filter giữ nguyên. Filter chip cũng HTMX. Row click → <code>/articles/{id}</code>.
+    </div>
+  </section>
+
+  <!-- ====================== 4. ARTICLE DETAIL ====================== -->
+  <section class="frame-block">
+    <div class="frame-meta">
+      <span class="num">04</span>
+      <h2>Article detail</h2>
+      <span class="route">GET /articles/{id}</span>
+    </div>
+    <p class="frame-desc">Reader-friendly: markdown render + sidebar metadata. Body có max-width đọc được; sidebar sticky với URL gốc, fetched_at, JSON-LD.</p>
+
+    <div class="frame">
+      <div class="chrome">
+        <div class="dots"><span></span><span></span><span></span></div>
+        <div class="url">localhost:8000/articles/8f3a1e</div>
+      </div>
+      <div class="viewport">
+        <div class="app">
+          <nav class="app-nav">
+            <div class="app-logo">star_<em>crawl</em></div>
+            <div class="links">
+              <a href="#">Dashboard</a>
+              <a href="#">Sources</a>
+              <a href="#" class="active">Articles</a>
+              <a href="#">Runs</a>
+            </div>
+            <div class="search-box"><span class="placeholder">Search…</span><span class="kbd">/</span></div>
+          </nav>
+          <div class="app-body">
+            <div class="article-grid">
+              <article class="article-body">
+                <p class="page-sub" style="margin:0 0 0.4rem;">
+                  <span class="pill">uber_engineering</span> · 2026-05-08 · 3,420 words · 14 min read
+                </p>
+                <h5>Zero-Growth Stack: Scaling Logistics with Constant Headcount</h5>
+                <div class="byline">
+                  <span>By <strong>L. Nguyen</strong></span>
+                  <span>·</span>
+                  <span>Backend, Data/ML</span>
+                </div>
+
+                <div class="skel-line s90"></div>
+                <div class="skel-line s80"></div>
+                <div class="skel-line s90"></div>
+                <div class="skel-line s60"></div>
+
+                <div class="skel-line tall"></div>
+                <div class="skel-line s90"></div>
+                <div class="skel-line s80"></div>
+                <div class="skel-line s90"></div>
+
+                <div class="skel-block"># import logging<br>config.workers = 8<br>queue = build_queue(...)</div>
+
+                <div class="skel-line s80"></div>
+                <div class="skel-line s90"></div>
+                <div class="skel-line s70"></div>
+                <div class="skel-line s40"></div>
+              </article>
+
+              <aside class="meta-panel">
+                <h6>Metadata</h6>
+                <dl>
+                  <dt>Source URL</dt>
+                  <dd><a href="#">uber.com/.../zero-growth-stack/</a></dd>
+                  <dt>Source name</dt>
+                  <dd>uber_engineering</dd>
+                  <dt>Published</dt>
+                  <dd>2026-05-08T09:14:00Z</dd>
+                  <dt>Crawled</dt>
+                  <dd>2026-05-09T14:20:31Z</dd>
+                  <dt>Author</dt>
+                  <dd>L. Nguyen</dd>
+                  <dt>Lang</dt>
+                  <dd>en (0.99)</dd>
+                  <dt>Word count</dt>
+                  <dd>3,420</dd>
+                  <dt>Content hash</dt>
+                  <dd>sha256:c4f1…2a8e</dd>
+                </dl>
+
+                <h6>Tags</h6>
+                <div style="display:flex;gap:0.3rem;flex-wrap:wrap;">
+                  <span class="pill muted">Backend</span>
+                  <span class="pill muted">Data/ML</span>
+                  <span class="pill muted">Logistics</span>
+                </div>
+
+                <h6 style="margin-top:1rem;">Actions</h6>
+                <div style="display:flex;gap:0.4rem;flex-wrap:wrap;">
+                  <span class="pill">Open original</span>
+                  <span class="pill">Copy markdown</span>
+                  <span class="pill">JSON-LD raw</span>
+                </div>
+              </aside>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="note">
+      <strong>Notes —</strong> Body render qua <code>markdown-it-py</code> với plugin: code highlight (<code>pygments</code>), table, footnote. Sidebar sticky trên desktop. Mobile: sidebar collapse thành drawer. "JSON-LD raw" mở dialog với raw payload từ <code>articles.metadata_json</code>.
+    </div>
+  </section>
+
+  <!-- ====================== 5. SEARCH ====================== -->
+  <section class="frame-block">
+    <div class="frame-meta">
+      <span class="num">05</span>
+      <h2>Search results (FTS5)</h2>
+      <span class="route">GET /search?q=…</span>
+    </div>
+    <p class="frame-desc">Full-text search qua SQLite FTS5. Snippet highlight, filter theo source, paginate. HTMX cho live results khi gõ (debounce 300ms).</p>
+
+    <div class="frame">
+      <div class="chrome">
+        <div class="dots"><span></span><span></span><span></span></div>
+        <div class="url">localhost:8000/search?q=event+driven+architecture</div>
+      </div>
+      <div class="viewport">
+        <div class="app">
+          <nav class="app-nav">
+            <div class="app-logo">star_<em>crawl</em></div>
+            <div class="links">
+              <a href="#">Dashboard</a>
+              <a href="#">Sources</a>
+              <a href="#">Articles</a>
+              <a href="#">Runs</a>
+            </div>
+            <div class="search-box" style="background:var(--surface);border-color:var(--accent);color:var(--text);">
+              <span class="placeholder">event driven architecture</span>
+              <span class="kbd">↵</span>
+            </div>
+          </nav>
+          <div class="app-body">
+            <div class="page-title"><h3>Search</h3><span class="crumb">"event driven architecture"</span></div>
+            <p class="page-sub">23 results in 47ms · across 7 sources</p>
+
+            <div class="filterbar">
+              <span class="chip on">All sources (23)</span>
+              <span class="chip">uber (8)</span>
+              <span class="chip">grab (5)</span>
+              <span class="chip">netflix (4)</span>
+              <span class="chip">stripe (3)</span>
+              <span class="chip">…</span>
+              <span class="grow"></span>
+              <span class="sort">Relevance ↓</span>
+            </div>
+
+            <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:0.4rem 1.25rem;">
+              <div class="search-result">
+                <div class="src"><span>uber_engineering</span><span>·</span><span>2026-04-28</span><span>·</span><span>2,322 words</span></div>
+                <h6>Realtime Routing Costs: A Postmortem</h6>
+                <p class="snip">…implemented an <span class="hit">event driven architecture</span> using Kafka to decouple ingestion from cost calculation. The shift cut p99 latency from…</p>
+              </div>
+              <div class="search-result">
+                <div class="src"><span>grab_engineering</span><span>·</span><span>2026-04-12</span><span>·</span><span>1,807 words</span></div>
+                <h6>Decoupling Order Flow with Event Streams</h6>
+                <p class="snip">…we adopted <span class="hit">event-driven architecture</span> across all order services. The motivation was clear — temporal coupling forced cascading deploys…</p>
+              </div>
+              <div class="search-result">
+                <div class="src"><span>netflix_tech</span><span>·</span><span>2026-03-30</span><span>·</span><span>3,140 words</span></div>
+                <h6>Why Netflix Chose CQRS for Studio Production</h6>
+                <p class="snip">…<span class="hit">Event-driven architecture</span> works best when the read and write models diverge naturally. CQRS gave us a clear seam…</p>
+              </div>
+              <div class="search-result">
+                <div class="src"><span>stripe_eng</span><span>·</span><span>2026-03-15</span><span>·</span><span>2,580 words</span></div>
+                <h6>Behind Stripe's Workflow Engine</h6>
+                <p class="snip">…the workflow engine sits between request handlers and the <span class="hit">event-driven</span> ledger. Idempotency keys are the contract…</p>
+              </div>
+            </div>
+
+            <div class="pagi">
+              <span class="pg">‹</span>
+              <span class="pg on">1</span>
+              <span class="pg">2</span>
+              <span class="pg">3</span>
+              <span class="pg">›</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="note">
+      <strong>Notes —</strong> Query: <code>articles_fts MATCH 'event NEAR/3 driven NEAR/3 architecture'</code>. Snippet via <code>snippet(articles_fts, ...)</code> với <code>&lt;mark&gt;</code> tags. HTMX <code>hx-trigger="keyup changed delay:300ms"</code> trên input → <code>/search?q=…</code>. Result click → article detail.
+    </div>
+  </section>
+
+  <!-- ====================== 6. RUNS ====================== -->
+  <section class="frame-block">
+    <div class="frame-meta">
+      <span class="num">06</span>
+      <h2>Crawl history</h2>
+      <span class="route">GET /runs</span>
+    </div>
+    <p class="frame-desc">Timeline của tất cả crawl run. Live progress bar khi <code>status=running</code> (HTMX poll 2s). Filter theo source và status.</p>
+
+    <div class="frame">
+      <div class="chrome">
+        <div class="dots"><span></span><span></span><span></span></div>
+        <div class="url">localhost:8000/runs</div>
+      </div>
+      <div class="viewport">
+        <div class="app">
+          <nav class="app-nav">
+            <div class="app-logo">star_<em>crawl</em></div>
+            <div class="links">
+              <a href="#">Dashboard</a>
+              <a href="#">Sources</a>
+              <a href="#">Articles</a>
+              <a href="#" class="active">Runs</a>
+            </div>
+            <div class="search-box"><span class="placeholder">Search…</span><span class="kbd">/</span></div>
+          </nav>
+          <div class="app-body">
+            <div class="page-title"><h3>Crawl runs</h3></div>
+            <p class="page-sub">42 runs · 1 currently running · last 30 days</p>
+
+            <div class="filterbar">
+              <span class="chip on">All status</span>
+              <span class="chip">Running</span>
+              <span class="chip">Success</span>
+              <span class="chip">Failed</span>
+              <span class="grow"></span>
+              <span class="sort">Source: all</span>
+              <span class="sort">Last 7 days</span>
+            </div>
+
+            <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;">
+              <div class="run-row live">
+                <span class="ts">2026-05-09 15:02</span>
+                <div>
+                  <div><span class="name">uber_engineering</span> <span class="pill">running</span></div>
+                  <div class="progress"><span></span></div>
+                  <span class="meta">discovered 198 / extracted 127 / errors 2</span>
+                </div>
+                <span class="meta">started 2m ago</span>
+              </div>
+              <div class="run-row">
+                <span class="ts">2026-05-09 14:20</span>
+                <div><span class="name">uber_engineering</span> <span class="pill ok">success</span></div>
+                <span class="meta">3m12s · +12 / 742 total</span>
+              </div>
+              <div class="run-row">
+                <span class="ts">2026-05-09 13:05</span>
+                <div><span class="name">grab_engineering</span> <span class="pill ok">success</span></div>
+                <span class="meta">0m48s · +3 / 289 total</span>
+              </div>
+              <div class="run-row">
+                <span class="ts">2026-05-09 12:30</span>
+                <div><span class="name">gojek</span> <span class="pill warn">failed</span></div>
+                <span class="meta">vercel challenge · 0 articles</span>
+              </div>
+              <div class="run-row">
+                <span class="ts">2026-05-09 09:00</span>
+                <div><span class="name">firstparty_engineering</span> <span class="pill ok">success</span></div>
+                <span class="meta">2m05s · +18 / 184 total</span>
+              </div>
+              <div class="run-row">
+                <span class="ts">2026-05-08 22:14</span>
+                <div><span class="name">medium_graphql</span> <span class="pill muted">partial</span></div>
+                <span class="meta">5m41s · +4 / 14 errors (rate-limited)</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="note">
+      <strong>Notes —</strong> Live row: <code>hx-get="/runs/{id}/progress" hx-trigger="every 2s" hx-swap="outerHTML"</code>. Khi run chuyển sang success/failed, server trả row final → poll dừng. Click row → <code>/runs/{id}</code>.
+    </div>
+  </section>
+
+  <!-- ====================== 7. RUN DETAIL ====================== -->
+  <section class="frame-block">
+    <div class="frame-meta">
+      <span class="num">07</span>
+      <h2>Run detail</h2>
+      <span class="route">GET /runs/{id}</span>
+    </div>
+    <p class="frame-desc">Diagnostic view: stat strip → error log (collapse) → articles của run. Khi run đang chạy, top stats live update.</p>
+
+    <div class="frame">
+      <div class="chrome">
+        <div class="dots"><span></span><span></span><span></span></div>
+        <div class="url">localhost:8000/runs/2026-05-09T14-20-uber</div>
+      </div>
+      <div class="viewport">
+        <div class="app">
+          <nav class="app-nav">
+            <div class="app-logo">star_<em>crawl</em></div>
+            <div class="links">
+              <a href="#">Dashboard</a>
+              <a href="#">Sources</a>
+              <a href="#">Articles</a>
+              <a href="#" class="active">Runs</a>
+            </div>
+            <div class="search-box"><span class="placeholder">Search…</span><span class="kbd">/</span></div>
+          </nav>
+          <div class="app-body">
+            <div class="page-title">
+              <span class="crumb">Runs /</span>
+              <h3>uber_engineering · 14:20 · success</h3>
+            </div>
+            <p class="page-sub">Run id <code>2026-05-09T14-20-uber</code> · started by CLI</p>
+
+            <div class="stats">
+              <div class="stat"><div class="label">Status</div><div class="value" style="color:var(--ok);">ok</div></div>
+              <div class="stat"><div class="label">Duration</div><div class="value">3m <small>12s</small></div></div>
+              <div class="stat"><div class="label">Discovered</div><div class="value">198</div></div>
+              <div class="stat"><div class="label">New</div><div class="value">+12</div></div>
+              <div class="stat"><div class="label">Errors</div><div class="value">2</div></div>
+            </div>
+
+            <div class="section-h"><h4>Errors (2)</h4><a class="more" href="#">Expand all</a></div>
+            <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;font-size:0.83rem;">
+              <div class="run-row" style="grid-template-columns:120px 1fr auto;">
+                <span class="ts">14:21:08</span>
+                <div>
+                  <span class="pill warn">timeout</span>
+                  <code style="margin-left:0.5rem; font-size:0.78rem;">/blog/zero-growth-stack/</code>
+                </div>
+                <span class="meta">retry 3/3 · gave up</span>
+              </div>
+              <div class="run-row" style="grid-template-columns:120px 1fr auto;">
+                <span class="ts">14:22:31</span>
+                <div>
+                  <span class="pill warn">extract</span>
+                  <code style="margin-left:0.5rem; font-size:0.78rem;">/blog/page/41/</code>
+                </div>
+                <span class="meta">trafilatura empty</span>
+              </div>
+            </div>
+
+            <div class="section-h"><h4>New articles (12)</h4></div>
+            <table class="list">
+              <thead>
+                <tr><th>Title</th><th>Published</th><th>Words</th><th>Hash</th></tr>
+              </thead>
+              <tbody>
+                <tr><td class="title">Zero-Growth Stack: Scaling Logistics with Constant Headcount</td><td class="mono">2026-05-08</td><td class="num">3,420</td><td class="mono">c4f1…2a8e</td></tr>
+                <tr><td class="title">Five Layers of Cloud at Uber Scale</td><td class="mono">2026-05-06</td><td class="num">2,158</td><td class="mono">7d22…91bc</td></tr>
+                <tr><td class="title">Ansible Automation Powers Fleet Provisioning</td><td class="mono">2026-05-04</td><td class="num">1,802</td><td class="mono">e09a…44d3</td></tr>
+                <tr><td class="title">Bank-Grade Privacy in Driver Onboarding</td><td class="mono">2026-05-02</td><td class="num">2,940</td><td class="mono">b41f…0277</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="note">
+      <strong>Notes —</strong> Run id format <code>{start_ts}-{source_name}</code> (URL-safe). Errors có severity (timeout / extract / parse / cf-block) — pill color khác nhau. Articles list link tới <code>/articles/{id}</code>. Mobile: stat strip wrap, errors thành accordion.
+    </div>
+  </section>
+
+  <!-- =============== INTERACTION SUMMARY =============== -->
+  <section class="frame-block">
+    <div class="frame-meta">
+      <span class="num">∞</span>
+      <h2>Interaction patterns (HTMX cheatsheet)</h2>
+    </div>
+    <p class="frame-desc">Tổng hợp các interaction quan trọng — implement bằng HTMX attributes thuần, không cần JS framework.</p>
+
+    <div class="frame" style="border-radius: var(--radius);">
+      <div style="padding:1.5rem;">
+        <table class="list" style="border:none;">
+          <thead>
+            <tr><th>UI</th><th>HTMX trigger</th><th>Endpoint</th><th>Target</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="title">Pagination (articles per source)</td>
+              <td class="mono">click</td>
+              <td class="mono">GET /sources/{n}?page=N</td>
+              <td class="mono">tbody</td>
+            </tr>
+            <tr>
+              <td class="title">Filter chip toggle</td>
+              <td class="mono">click</td>
+              <td class="mono">GET /sources/{n}?cat=X</td>
+              <td class="mono">main-list</td>
+            </tr>
+            <tr>
+              <td class="title">Live search</td>
+              <td class="mono">keyup changed delay:300ms</td>
+              <td class="mono">GET /search?q=…</td>
+              <td class="mono">#results</td>
+            </tr>
+            <tr>
+              <td class="title">Run progress poll</td>
+              <td class="mono">every 2s</td>
+              <td class="mono">GET /runs/{id}/progress</td>
+              <td class="mono">closest .run-row</td>
+            </tr>
+            <tr>
+              <td class="title">JSON-LD raw modal</td>
+              <td class="mono">click</td>
+              <td class="mono">GET /articles/{id}/jsonld</td>
+              <td class="mono">#dialog</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="note">
+      <strong>Stack reminder —</strong> FastAPI returns Jinja2 partial templates cho mỗi endpoint HTMX. Full-page request → render layout + partial. Same template, hai modes — <code>hx-request</code> header phân biệt.
+    </div>
+  </section>
+
+  <footer class="doc-footer">
+    <p>
+      Wireframes v1 · cùng design tokens với <a href="./PLAN.html">PLAN.html</a> ·
+      Frame chrome = browser mockup không phải finished UI ·
+      Render text trong article = skeleton bars để tránh khóa typography quá sớm.
+    </p>
+    <p style="margin-top:0.5rem; font-size:0.78rem;">
+      Generated for <code>star_crawl</code> · 2026-05-09 · 7 frames + interaction sheet
+    </p>
+  </footer>
+
+</div>
+
+</body>
+</html>
