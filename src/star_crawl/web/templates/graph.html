@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}Graph · star_crawl{% endblock %}
+{% block body %}
+
+<header class="page-head">
+  <h1>Topic graph</h1>
+  <p class="muted">
+    Built {{ meta.built_at[:16] if meta.built_at else 'never' }} ·
+    {{ meta.last_build_articles }} articles at build time ·
+    {{ meta.current_articles }} now
+  </p>
+  {% if meta.is_stale %}
+  <div class="callout warn">
+    <strong>Graph is stale</strong> — corpus has grown by more than 5% since the
+    last build. Run <code>star-crawl build-graph</code> to refresh.
+  </div>
+  {% endif %}
+</header>
+
+<div class="graph-shell">
+  <aside class="graph-sidebar">
+    <h3>Filters</h3>
+
+    <div class="g-search">
+      <input type="search" name="kw" placeholder="Find keyword…"
+             hx-get="/keywords/search"
+             hx-trigger="keyup changed delay:200ms"
+             hx-target="#kw-suggestions"
+             autocomplete="off">
+      <div id="kw-suggestions"></div>
+    </div>
+
+    <form id="filter-form">
+      <label>
+        <span>Min frequency</span>
+        <input type="range" name="min_freq" min="1" max="20" value="{{ filters.min_freq }}"
+               hx-get="/graph.json" hx-trigger="change"
+               hx-target="#cy-data" hx-swap="innerHTML"
+               oninput="document.getElementById('mf-out').textContent = this.value">
+        <output id="mf-out">{{ filters.min_freq }}</output>
+      </label>
+      <label>
+        <span>Min NPMI</span>
+        <input type="range" name="min_npmi" min="0" max="0.6" step="0.05" value="{{ filters.min_npmi }}"
+               hx-get="/graph.json" hx-trigger="change"
+               hx-target="#cy-data" hx-swap="innerHTML"
+               oninput="document.getElementById('np-out').textContent = this.value">
+        <output id="np-out">{{ filters.min_npmi }}</output>
+      </label>
+    </form>
+
+    <details class="legend">
+      <summary>Reading the graph</summary>
+      <ul>
+        <li>Node size ∝ articles containing the keyword.</li>
+        <li>Node color = cluster (Louvain community).</li>
+        <li>Edge width = NPMI (relationship strength).</li>
+        <li>Click a node to drill into articles.</li>
+      </ul>
+    </details>
+  </aside>
+
+  <div class="graph-canvas">
+    <div id="cy"></div>
+    <div id="cy-data" hidden>{{ payload_json | safe }}</div>
+  </div>
+
+  <aside class="keyword-panel" id="keyword-panel">
+    <p class="muted">Click a node to see neighbors and recent articles.</p>
+  </aside>
+</div>
+
+<script src="/static/vendor/cytoscape.min.js"></script>
+<script src="/static/vendor/layout-base.js"></script>
+<script src="/static/vendor/cose-base.js"></script>
+<script src="/static/vendor/cytoscape-fcose.js"></script>
+<script src="/static/graph.js" defer></script>
+
+{% endblock %}

@@ -1,0 +1,14 @@
+{% if results %}
+<ul class="kw-suggestions">
+{% for r in results %}
+  <li>
+    <a href="#" data-kw-id="{{ r.id }}"
+       hx-get="/keywords/{{ r.id }}"
+       hx-target="#keyword-panel"
+       hx-swap="innerHTML">{{ r.display }} <span class="muted">({{ r.doc_freq }})</span></a>
+  </li>
+{% endfor %}
+</ul>
+{% elif q %}
+<p class="muted">No matches for "{{ q }}".</p>
+{% endif %}

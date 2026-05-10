@@ -211,6 +211,143 @@ def extract_keywords_cmd(
     )
 
 
+@app.command("build-graph")
+def build_graph_cmd(
+    min_doc_freq: int = typer.Option(3, "--min-doc-freq"),
+    min_co_count: int = typer.Option(2, "--min-co-count"),
+    min_npmi: float = typer.Option(0.15, "--min-npmi"),
+    max_edges_per_node: int = typer.Option(30, "--max-edges-per-node"),
+    cluster_resolution: float = typer.Option(1.0, "--cluster-resolution"),
+    cluster_seed: int = typer.Option(42, "--cluster-seed"),
+    data_dir: str | None = typer.Option(None, "--data-dir"),
+) -> None:
+    """Build the keyword co-occurrence graph from existing article_keywords."""
+    from star_crawl.graph.builder import build_graph
+
+    path = _data_dir(data_dir)
+    db_migrate.migrate(path)
+
+    res = build_graph(
+        data_dir=path,
+        min_doc_freq=min_doc_freq,
+        min_co_count=min_co_count,
+        min_npmi=min_npmi,
+        max_edges_per_node=max_edges_per_node,
+        cluster_resolution=cluster_resolution,
+        cluster_seed=cluster_seed,
+    )
+    console.print(
+        f"graph: [green]{res.n_keywords}[/green] keywords · "
+        f"[green]{res.n_edges}[/green] edges · "
+        f"[green]{res.n_clusters}[/green] clusters"
+    )
+    if res.cluster_labels:
+        for cid in sorted(res.cluster_labels):
+            console.print(f"  cluster {cid} — [cyan]{res.cluster_labels[cid]}[/cyan]")
+
+
+graph_app = typer.Typer(help="Inspect the keyword graph.", no_args_is_help=True)
+app.add_typer(graph_app, name="graph")
+
+
+@graph_app.command("stats")
+def graph_stats_cmd(data_dir: str | None = typer.Option(None, "--data-dir")) -> None:
+    """Print summary of the latest graph build."""
+    from star_crawl.db.connection import connect
+
+    conn = connect(_data_dir(data_dir), read_only=True)
+    try:
+        row = conn.execute(
+            """SELECT n_keywords, n_edges, n_clusters, built_at
+                 FROM graph_meta ORDER BY built_at DESC LIMIT 1"""
+        ).fetchone()
+        if row is None:
+            console.print("[yellow]no graph built yet[/yellow]")
+            return
+        console.print(
+            f"latest build [dim]{row['built_at'][:16]}[/dim]: "
+            f"{row['n_keywords']} keywords · {row['n_edges']} edges · "
+            f"{row['n_clusters']} clusters"
+        )
+        clusters = conn.execute(
+            "SELECT id, label, n_keywords FROM clusters ORDER BY n_keywords DESC LIMIT 20"
+        ).fetchall()
+        for c in clusters:
+            console.print(
+                f"  cluster {c['id']:>3} — [cyan]{c['label']}[/cyan] ({c['n_keywords']})"
+            )
+    finally:
+        conn.close()
+
+
+@graph_app.command("top")
+def graph_top_cmd(
+    by: str = typer.Option("doc_freq", "--by", help="doc_freq | degree"),
+    limit: int = typer.Option(30, "--limit"),
+    cluster: int | None = typer.Option(None, "--cluster"),
+    data_dir: str | None = typer.Option(None, "--data-dir"),
+) -> None:
+    """List top keywords by frequency or degree."""
+    from star_crawl.db.connection import connect
+
+    if by not in ("doc_freq", "degree"):
+        err_console.print("[red]error:[/red] --by must be doc_freq or degree")
+        raise typer.Exit(code=3)
+
+    conn = connect(_data_dir(data_dir), read_only=True)
+    try:
+        params: list[object] = []
+        where = ""
+        if cluster is not None:
+            where = "WHERE cluster_id = ?"
+            params.append(cluster)
+        rows = conn.execute(
+            f"""SELECT id, display, doc_freq, degree, cluster_id
+                  FROM v_keyword_full {where}
+                 ORDER BY {by} DESC LIMIT ?""",
+            [*params, limit],
+        ).fetchall()
+        table = Table(title=f"Top by {by}")
+        table.add_column("ID", justify="right")
+        table.add_column("Display")
+        table.add_column("Cluster", justify="right")
+        table.add_column("Docs", justify="right")
+        table.add_column("Degree", justify="right")
+        for r in rows:
+            table.add_row(
+                str(r["id"]), r["display"],
+                str(r["cluster_id"] or "—"),
+                str(r["doc_freq"]), str(r["degree"]),
+            )
+        console.print(table)
+    finally:
+        conn.close()
+
+
+@graph_app.command("relabel")
+def graph_relabel_cmd(
+    cluster_id: int = typer.Argument(...),
+    label: str = typer.Argument(...),
+    data_dir: str | None = typer.Option(None, "--data-dir"),
+) -> None:
+    """Override an auto-cluster label (preserved across rebuilds)."""
+    from star_crawl.db.connection import connect
+
+    conn = connect(_data_dir(data_dir))
+    try:
+        cur = conn.execute(
+            "UPDATE clusters SET label = ?, is_user_labeled = 1 WHERE id = ?",
+            (label, cluster_id),
+        )
+        if cur.rowcount == 0:
+            err_console.print(f"[red]error:[/red] cluster {cluster_id} not found")
+            raise typer.Exit(code=3)
+        conn.commit()
+    finally:
+        conn.close()
+    console.print(f"cluster {cluster_id} → [cyan]{label}[/cyan]")
+
+
 @app.command()
 def stats(
     data_dir: str | None = typer.Option(None, "--data-dir"),
