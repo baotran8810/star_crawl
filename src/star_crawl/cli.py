@@ -95,6 +95,85 @@ def db_migrate_cmd(
 
 
 @app.command()
+def run(
+    source_name: str | None = typer.Argument(None, help="Source name (omit with --all)"),
+    all_sources: bool = typer.Option(False, "--all", help="Run every configured source"),
+    data_dir: str | None = typer.Option(None, "--data-dir"),
+    config_dir: str = typer.Option("configs/sources", "--config-dir"),
+    allow_policy_blocked: bool = typer.Option(False, "--allow-policy-blocked"),
+    limit: int | None = typer.Option(None, "--limit", help="Stop after N new articles per source"),
+) -> None:
+    """Crawl one or all sources."""
+    import asyncio as _asyncio
+
+    from star_crawl.core import pipeline
+
+    if not source_name and not all_sources:
+        err_console.print("[red]error:[/red] pass <source-name> or --all")
+        raise typer.Exit(code=3)
+
+    try:
+        all_configs = load_all(Path(config_dir))
+    except SourceLoadError as e:
+        err_console.print(f"[red]error:[/red] {e}")
+        raise typer.Exit(code=3) from None
+
+    if all_sources:
+        sources = list(all_configs.values())
+    else:
+        if source_name not in all_configs:
+            err_console.print(f"[red]error:[/red] unknown source '{source_name}'")
+            err_console.print(f"available: {', '.join(all_configs) or '<none>'}")
+            raise typer.Exit(code=3)
+        sources = [all_configs[source_name]]
+
+    path = _data_dir(data_dir)
+    db_migrate.migrate(path)
+
+    results = _asyncio.run(
+        pipeline.run_all(
+            sources,
+            data_dir=path,
+            allow_policy_blocked=allow_policy_blocked,
+            limit=limit,
+        )
+    )
+
+    table = Table(title="Crawl summary")
+    table.add_column("Source", style="cyan")
+    table.add_column("Status")
+    table.add_column("Discovered", justify="right")
+    table.add_column("New", justify="right")
+    table.add_column("Dup", justify="right")
+    table.add_column("Errors", justify="right")
+    table.add_column("Duration", justify="right")
+
+    for r in results:
+        status_style = {
+            "success": "green",
+            "partial": "yellow",
+            "failed": "red",
+            "skipped": "dim",
+        }.get(r.status, "white")
+        table.add_row(
+            r.source_name,
+            f"[{status_style}]{r.status}[/{status_style}]",
+            str(r.discovered),
+            str(r.extracted_new),
+            str(r.extracted_dup),
+            str(r.error_count),
+            f"{r.duration_seconds:.1f}s",
+        )
+    console.print(table)
+
+    # Exit code per contracts/cli.md
+    if any(r.status == "failed" for r in results):
+        raise typer.Exit(code=2)
+    if any(r.status == "partial" for r in results):
+        raise typer.Exit(code=1)
+
+
+@app.command()
 def stats(
     data_dir: str | None = typer.Option(None, "--data-dir"),
 ) -> None:

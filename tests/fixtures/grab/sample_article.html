@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Building a real-time event pipeline</title>
+  <meta name="author" content="Jane Doe">
+  <meta property="article:published_time" content="2026-04-15T10:00:00Z">
+  <script type="application/ld+json">
+  {"@context":"https://schema.org","@type":"Article","headline":"Building a real-time event pipeline","author":{"@type":"Person","name":"Jane Doe"},"datePublished":"2026-04-15T10:00:00Z"}
+  </script>
+</head>
+<body>
+  <nav><a href="/">Home</a> <a href="/about">About</a></nav>
+  <header><h1>Grab Engineering</h1></header>
+  <article>
+    <h1>Building a real-time event pipeline</h1>
+    <p>This post describes how we built a real-time event pipeline using Apache Kafka,
+       enabling us to process millions of events per second with sub-second latency.
+       The architecture decouples producers from consumers and provides at-least-once
+       delivery semantics.</p>
+    <p>We chose Kafka over alternatives like RabbitMQ because of its strong durability
+       guarantees and horizontal scalability. The system handles seasonal traffic
+       spikes during promotions without degradation.</p>
+    <h2>Architecture</h2>
+    <p>Our event pipeline consists of three main layers: ingestion, processing, and
+       storage. Each layer is independently scalable. Ingestion uses a tiered approach
+       with edge caching to reduce load on the core brokers.</p>
+    <p>Processing is done by Flink jobs that consume from Kafka topics and produce
+       enriched events back. Storage tier writes the final state to Postgres for
+       analytical queries and to a columnar store for long-term retention.</p>
+    <h2>Lessons learned</h2>
+    <p>Backpressure handling is critical when downstream consumers slow down. We
+       implemented explicit pause/resume semantics with monitoring. Cardinality
+       explosions in metrics caught us by surprise twice; we now bound dimensions
+       at the source. Retention policies must match data sensitivity to keep storage
+       costs predictable across regions.</p>
+    <p>The team learned to invest early in observability, especially trace IDs that
+       follow events end-to-end. This paid off when debugging cross-service issues.</p>
+  </article>
+  <aside class="related">
+    <h3>Related posts</h3>
+    <a href="/another-post">Another article</a>
+  </aside>
+  <footer>© 2026 Grab Engineering. All rights reserved.</footer>
+</body>
+</html>
