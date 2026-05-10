@@ -1,0 +1,24 @@
+# Alias map: variant → canonical. Both forms get resolved to the canonical
+# normalized term. Example: k8s ≡ kubernetes → keyword.term = "kubernetes",
+# display kept as "Kubernetes".
+
+aliases:
+  k8s: kubernetes
+  postgres: postgresql
+  pg: postgresql
+  mongo: mongodb
+  rest api: rest
+  restful: rest
+  http2: http/2
+  http 2: http/2
+  http3: http/3
+  http 3: http/3
+  ts: typescript
+  js: javascript
+  ml: machine learning
+  ai: artificial intelligence
+  ops: operations
+  devops: dev-ops
+  ci: continuous integration
+  cd: continuous deployment
+  iac: infrastructure as code

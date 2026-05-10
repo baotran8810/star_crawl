@@ -1,0 +1,109 @@
+# Generic noise terms NEVER kept as keywords, even when KeyBERT scores them
+# highly. These are too common across tech blogs to provide signal.
+
+terms:
+  - team
+  - engineer
+  - engineering
+  - system
+  - service
+  - feature
+  - product
+  - product manager
+  - article
+  - post
+  - blog
+  - blog post
+  - writeup
+  - solution
+  - approach
+  - way
+  - thing
+  - things
+  - work
+  - working
+  - issue
+  - issues
+  - challenge
+  - challenges
+  - example
+  - examples
+  - case
+  - cases
+  - use case
+  - use cases
+  - learning
+  - learnings
+  - lesson
+  - lessons
+  - context
+  - way forward
+  - improvement
+  - improvements
+  - performance
+  - reliability
+  - quality
+  - architecture
+  - implementation
+  - production
+  - infrastructure
+  - software
+  - hardware
+  - tool
+  - tools
+  - platform
+  - environment
+  - process
+  - processes
+  - layer
+  - module
+  - component
+  - object
+  - function
+  - method
+  - data
+  - file
+  - files
+  - line
+  - lines
+  - row
+  - rows
+  - record
+  - records
+  - user
+  - users
+  - customer
+  - customers
+  - request
+  - response
+  - call
+  - calls
+  - api
+  - server
+  - client
+  - service team
+  - cross team
+  - day
+  - days
+  - week
+  - weeks
+  - month
+  - months
+  - year
+  - years
+  - time
+  - times
+  - hour
+  - hours
+  - minute
+  - minutes
+  - second
+  - seconds
+  - number
+  - numbers
+  - level
+  - levels
+  - step
+  - steps
+  - part
+  - parts

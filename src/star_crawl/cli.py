@@ -173,6 +173,44 @@ def run(
         raise typer.Exit(code=1)
 
 
+@app.command("extract-keywords")
+def extract_keywords_cmd(
+    source: str | None = typer.Option(None, "--source"),
+    rebuild: bool = typer.Option(False, "--rebuild"),
+    top_n: int = typer.Option(15, "--top-n"),
+    min_score: float = typer.Option(0.35, "--min-score"),
+    no_glossary: bool = typer.Option(False, "--no-glossary"),
+    config_dir: str = typer.Option("configs/graph", "--config-dir"),
+    data_dir: str | None = typer.Option(None, "--data-dir"),
+) -> None:
+    """Run keyword extraction over the corpus (KeyBERT + glossary boost)."""
+    from star_crawl.graph.extract import KeyBertExtractor
+    from star_crawl.graph.glossary import Glossary, load as load_glossary
+    from star_crawl.graph.runner import extract_corpus
+
+    path = _data_dir(data_dir)
+    db_migrate.migrate(path)
+
+    glossary = load_glossary(Path(config_dir)) if not no_glossary else Glossary()
+    extractor = KeyBertExtractor(top_n=top_n, min_score=min_score)
+
+    console.print("[dim]Loading model (first run downloads ~80MB)…[/dim]")
+    stats = extract_corpus(
+        extractor=extractor,
+        glossary=glossary,
+        config_dir=Path(config_dir),
+        data_dir=path,
+        source=source,
+        rebuild=rebuild,
+    )
+    console.print(
+        f"extracted: [green]{stats.articles_processed}[/green] articles · "
+        f"keywords [bold]{stats.keywords_total}[/bold] "
+        f"({stats.keywords_glossary} glossary, {stats.keywords_keybert} keybert) · "
+        f"skipped {stats.articles_skipped} (lang filter)"
+    )
+
+
 @app.command()
 def stats(
     data_dir: str | None = typer.Option(None, "--data-dir"),

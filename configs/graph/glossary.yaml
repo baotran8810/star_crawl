@@ -1,0 +1,157 @@
+# Tech terms always picked up by extractor (exact match, case-insensitive).
+# Each entry: display form (used in graph). Lowercase normalized form is
+# computed automatically. See src/star_crawl/graph/glossary.py.
+
+terms:
+  # Languages
+  - Python
+  - JavaScript
+  - TypeScript
+  - Go
+  - Rust
+  - Java
+  - Kotlin
+  - Swift
+  - Ruby
+  - PHP
+  - Scala
+  - C++
+  - Erlang
+
+  # Web frameworks
+  - React
+  - Vue
+  - Svelte
+  - Next.js
+  - Nuxt
+  - Angular
+  - FastAPI
+  - Django
+  - Flask
+  - Express
+  - Rails
+  - Spring Boot
+  - Laravel
+
+  # Data stores
+  - Postgres
+  - PostgreSQL
+  - MySQL
+  - MongoDB
+  - Redis
+  - SQLite
+  - DynamoDB
+  - Cassandra
+  - ClickHouse
+  - Snowflake
+  - BigQuery
+  - Elasticsearch
+  - DuckDB
+  - Pinecone
+
+  # Streaming / messaging
+  - Kafka
+  - Pulsar
+  - RabbitMQ
+  - NATS
+  - Kinesis
+  - Flink
+  - Spark
+  - Airflow
+  - Dagster
+  - Beam
+
+  # Infra / orchestration
+  - Kubernetes
+  - k8s
+  - Docker
+  - Helm
+  - Terraform
+  - Ansible
+  - Pulumi
+  - Nomad
+  - Consul
+
+  # Cloud
+  - AWS
+  - GCP
+  - Azure
+  - Cloudflare
+  - Vercel
+  - Fly.io
+  - Lambda
+  - EC2
+  - S3
+  - GKE
+  - EKS
+
+  # Observability
+  - Prometheus
+  - Grafana
+  - OpenTelemetry
+  - Jaeger
+  - Datadog
+  - Honeycomb
+  - Sentry
+  - Loki
+
+  # Service mesh / networking
+  - Envoy
+  - Istio
+  - gRPC
+  - GraphQL
+  - REST
+  - WebSocket
+  - HTTP/2
+  - HTTP/3
+  - QUIC
+
+  # Patterns / concepts
+  - microservice
+  - monolith
+  - event-driven
+  - event sourcing
+  - CQRS
+  - CRDT
+  - saga
+  - circuit breaker
+  - backpressure
+  - idempotency
+  - eventual consistency
+
+  # AI / ML
+  - LLM
+  - GPT
+  - Claude
+  - embedding
+  - transformer
+  - PyTorch
+  - TensorFlow
+  - LangChain
+  - RAG
+  - vector database
+  - fine-tuning
+  - quantization
+  - inference
+
+  # Security
+  - OAuth
+  - OIDC
+  - JWT
+  - mTLS
+  - SSO
+  - SAML
+  - XSS
+  - CSRF
+  - SQL injection
+  - zero trust
+
+  # Testing
+  - unit test
+  - integration test
+  - e2e
+  - chaos engineering
+  - shadow testing
+  - canary
+  - blue/green
+  - feature flag
