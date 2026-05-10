@@ -18,7 +18,7 @@
 - [ ] T002 Document model download behavior in `quickstart.md`: first `extract-keywords` invocation downloads `all-MiniLM-L6-v2` to `~/.cache/huggingface/`
 - [ ] T003 [P] Create `src/star_crawl/graph/` package with `__init__.py`
 - [ ] T004 [P] Create `configs/graph/` with empty `glossary.yaml`, `aliases.yaml`, `blacklist.yaml`, `cluster_labels.yaml` + a `README.md` explaining each
-- [ ] T005 [P] Vendor frontend libs: download Cytoscape.js 3.x → `src/star_crawl/web/static/vendor/cytoscape.min.js`; cytoscape-fcose → `src/star_crawl/web/static/vendor/cytoscape-fcose.min.js`; record source URLs + versions in `static/vendor/README.md`
+- [ ] T005 [P] Vendor frontend libs: download Cytoscape.js 3.x → `src/star_crawl/web/static/vendor/cytoscape.min.js`; cytoscape-fcose → `src/star_crawl/web/static/vendor/cytoscape-fcose.min.js`; record source URLs + versions in `static/vendor/README.md`. **Prerequisite**: feature 002 task T003 must be complete (creates `src/star_crawl/web/static/vendor/`). If running 003 ahead of 002, T005 MUST first `mkdir -p` the parent directory and abort with an actionable error if `src/star_crawl/web/` does not exist.
 - [ ] T006 [P] Create `tests/graph/conftest.py` with fixture corpus: 30 mini-articles in `tests/fixtures/graph_corpus/` covering 3 known topical clusters (streaming, storage, mesh)
 
 ---
@@ -180,6 +180,8 @@
 - [ ] T066 [P] `src/star_crawl/cli.py`: `graph relabel <cluster_id> <label>` — set `clusters.label` and `is_user_labeled=1`
 - [ ] T067 [P] Stale banner: `src/star_crawl/web/templates/graph.html` shows banner if `(current_articles - last_build_articles) / current_articles > 0.05`; queries one row from `graph_meta` at request time
 - [ ] T068 [P] `tests/graph/test_stale_banner.py`: simulate corpus growth +10% over last build → banner present; +1% → absent
+- [ ] T068a [P] Empty-state — "corpus too small": `src/star_crawl/web/routers/graph.py` checks `SELECT COUNT(*) FROM keywords` before rendering; if < 20 rows OR `graph_meta` has zero rows, render `templates/graph_empty.html` with message "Corpus too small for a meaningful graph (need ≥ 20 keywords across ≥ 100 articles). Run `star-crawl extract-keywords --all && star-crawl build-graph` after crawling more sources." Honors FR-014's "not enough data" branch separately from the stale branch.
+- [ ] T068b [P] `tests/graph/test_empty_state.py`: with empty `keywords` table → empty-state page renders, no Cytoscape canvas; with 19 keywords → empty-state still renders; with ≥ 20 keywords → normal graph page renders
 - [ ] T069 [P] Skip non-English articles during extraction; record count in `graph_meta.notes`
 - [ ] T070 [P] Coverage check: `pytest --cov=star_crawl.graph --cov-fail-under=80`
 - [ ] T071 [P] Performance smoke test: extract on 100-article fixture corpus completes in < 10s on a 2023 laptop CPU
@@ -248,4 +250,4 @@ After MVP, US3 + US4 + US5 in parallel branches.
 
 ## Format validation
 
-All 75 tasks follow `- [ ] TXXX [P?] [USx?] Description with file path`. Setup/Foundational/Polish phases have no story label. User-story phases all carry `[USx]`. Every implementation task names a concrete file path.
+All 77 tasks (T001–T075 + T068a + T068b) follow `- [ ] TXXX [P?] [USx?] Description with file path`. Setup/Foundational/Polish phases have no story label. User-story phases all carry `[USx]`. Every implementation task names a concrete file path.

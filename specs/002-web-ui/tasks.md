@@ -139,7 +139,7 @@
 ## Phase 7: Polish & Cross-Cutting
 
 - [ ] T051 [P] `tests/web/test_404.py`: every route variant with non-existent IDs returns the friendly HTML 404, not stack traces
-- [ ] T052 [P] `tests/web/test_500_handler.py`: deliberate exception in route → 500 page with no internal trace
+- [ ] T052 [P] `tests/web/test_500_handler.py`: deliberate exception in route → 500 page returns; assert response body does **NOT** contain `Traceback`, file system paths (`/usr/`, `src/star_crawl/`), or the raised exception's class name. Verify only the user-facing error template is rendered. (Tightened per FR-019 — internal stack traces must never reach the client.)
 - [ ] T053 [P] Render performance: profile `/sources/<name>` and `/search` against 10k-article fixture; capture timing in `tests/web/test_perf.py` with hard p95 thresholds
 - [ ] T054 [P] Mobile: verify article reader page works on 375px viewport (test via Playwright snapshot if feasible; otherwise manual checklist)
 - [ ] T055 [P] Empty-state polish: every list/grid view shows actionable message when empty
