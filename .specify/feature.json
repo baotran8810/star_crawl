@@ -1,0 +1,8 @@
+{
+  "feature_directory": "specs/003-star-graph",
+  "all_features": [
+    "specs/001-crawler-core",
+    "specs/002-web-ui",
+    "specs/003-star-graph"
+  ]
+}
