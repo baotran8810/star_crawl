@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Crawl runs · star_crawl{% endblock %}
+{% block body %}
+
+<header class="page-head">
+  <h1>Crawl runs</h1>
+  <p class="muted">{{ runs|length }} runs.</p>
+</header>
+
+<form method="get" class="filterbar">
+  <label>Source
+    <select name="source">
+      <option value="">all</option>
+      {% for s in sources %}
+      <option value="{{ s.name }}" {% if filters.source == s.name %}selected{% endif %}>{{ s.display_name }}</option>
+      {% endfor %}
+    </select>
+  </label>
+  <label>Status
+    <select name="status">
+      <option value="">all</option>
+      {% for st in ['running','success','partial','failed','skipped'] %}
+      <option value="{{ st }}" {% if filters.status == st %}selected{% endif %}>{{ st }}</option>
+      {% endfor %}
+    </select>
+  </label>
+  <button type="submit" class="pill">Apply</button>
+</form>
+
+<div class="run-list">
+{% for r in runs %}
+  {% include "partials/run_row.html" with context %}
+{% endfor %}
+{% if not runs %}
+<div class="empty-state">
+  <h2>No runs yet</h2>
+  <p>Run <code>star-crawl run --all</code> from the CLI to populate.</p>
+</div>
+{% endif %}
+</div>
+{% endblock %}

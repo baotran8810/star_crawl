@@ -1,0 +1,27 @@
+{# `run` is the canonical name; loops in runs.html use `r`. Bind. #}
+{% set run = run | default(r) %}
+{% if run.status == 'running' %}
+  {# poll every 2s; server returns this same partial so the loop ends naturally
+     when the status flips to a terminal value (no hx-trigger in that branch). #}
+<div class="run-row live"
+     id="run-row-{{ run.id }}"
+     hx-get="/runs/{{ run.id }}/progress"
+     hx-trigger="every 2s"
+     hx-target="this"
+     hx-swap="outerHTML">
+{% else %}
+<div class="run-row" id="run-row-{{ run.id }}">
+{% endif %}
+  <a class="ts mono" href="/runs/{{ run.id }}">{{ run.started_at[:16] }}</a>
+  <span class="name">{{ run.source_display or run.source_name }}</span>
+  <span class="pill {{ run.status }}">{{ run.status }}</span>
+  <span class="meta">
+    {% if run.status == 'running' %}
+      {{ run.extracted_new }} of {{ run.discovered }} done
+      {% if in_flight is defined %}· {{ in_flight }} in flight{% endif %}
+    {% else %}
+      {{ run.duration_seconds | round(1) }}s · +{{ run.extracted_new }} new
+      · {{ run.error_count }} err
+    {% endif %}
+  </span>
+</div>

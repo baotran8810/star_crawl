@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}Run #{{ run.id }} · star_crawl{% endblock %}
+{% block body %}
+
+<header class="page-head">
+  <p class="crumb"><a href="/runs">Runs</a> /</p>
+  <h1>{{ run.source_display }} · #{{ run.id }} · <span class="pill {{ run.status }}">{{ run.status }}</span></h1>
+  <p class="muted">started {{ run.started_at[:16] }}{% if run.finished_at %} · finished {{ run.finished_at[:16] }}{% endif %}</p>
+</header>
+
+<section class="stats">
+  <div class="stat"><div class="label">Duration</div><div class="value">{{ run.duration_seconds | round(1) }}<small>s</small></div></div>
+  <div class="stat"><div class="label">Discovered</div><div class="value">{{ run.discovered }}</div></div>
+  <div class="stat"><div class="label">New</div><div class="value">{{ run.extracted_new }}</div></div>
+  <div class="stat"><div class="label">Dup</div><div class="value">{{ run.extracted_dup }}</div></div>
+  <div class="stat"><div class="label">Errors</div><div class="value">{{ run.error_count }}</div></div>
+</section>
+
+{% if errors %}
+<div class="section-h"><h2>Errors ({{ errors|length }})</h2></div>
+<table class="list">
+<thead><tr><th>Time</th><th>Kind</th><th>URL</th><th>Message</th></tr></thead>
+<tbody>
+{% for e in errors %}
+<tr>
+  <td class="mono">{{ e.occurred_at[:16] }}</td>
+  <td><span class="pill warn">{{ e.kind }}</span></td>
+  <td class="mono"><a href="{{ e.url }}" target="_blank" rel="noopener">{{ e.url }}</a></td>
+  <td class="muted">{{ e.message }}</td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+{% endif %}
+
+{% if new_articles %}
+<div class="section-h"><h2>New articles ({{ new_articles|length }})</h2></div>
+<table class="list">
+<thead><tr><th>Title</th><th>Published</th><th>Words</th><th>Hash</th></tr></thead>
+<tbody>
+{% for a in new_articles %}
+<tr>
+  <td class="title"><a href="/articles/{{ a.id }}">{{ a.title }}</a></td>
+  <td class="mono">{{ a.published_at[:10] if a.published_at else '—' }}</td>
+  <td class="num">{{ a.word_count }}</td>
+  <td class="mono">{{ a.content_hash[:12] }}…</td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+{% endif %}
+
+{% if not errors and not new_articles %}
+<div class="empty-state">
+  <h2>Nothing to show</h2>
+  <p>No articles ingested by this run and no errors recorded.</p>
+</div>
+{% endif %}
+
+{% endblock %}
