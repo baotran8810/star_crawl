@@ -1,0 +1,113 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "star_crawl"
+version = "0.1.0"
+description = "Universal web crawler with content extraction. Targets Uber/Grab/Gojek/Medium and tech blog ecosystem."
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.11"
+authors = [{ name = "baotran8810" }]
+keywords = ["crawler", "scraper", "rss", "extract", "corpus", "llm-ready"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Internet :: WWW/HTTP",
+    "Topic :: Text Processing",
+]
+
+dependencies = [
+    "httpx[http2]>=0.27,<1.0",
+    "trafilatura>=2.0,<3.0",
+    "readability-lxml>=0.8,<1.0",
+    "feedparser>=6.0,<7.0",
+    "pydantic>=2.7,<3.0",
+    "typer>=0.12,<1.0",
+    "rich>=13.7,<14.0",
+    "pyyaml>=6.0,<7.0",
+    "tldextract>=5.1,<6.0",
+    "langdetect>=1.0,<2.0",
+    "beautifulsoup4>=4.12,<5.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.2,<9.0",
+    "pytest-asyncio>=0.23,<1.0",
+    "pytest-cov>=5.0,<6.0",
+    "respx>=0.21,<1.0",
+    "ruff>=0.5,<1.0",
+    "mypy>=1.10,<2.0",
+]
+web = [
+    "fastapi>=0.111,<1.0",
+    "uvicorn[standard]>=0.30,<1.0",
+    "jinja2>=3.1,<4.0",
+    "markdown-it-py>=3.0,<4.0",
+    "linkify-it-py>=2.0,<3.0",
+    "mdit-py-plugins>=0.4,<1.0",
+    "bleach>=6.1,<7.0",
+    "python-multipart>=0.0.9,<1.0",
+    "aiosqlite>=0.20,<1.0",
+]
+browser = ["playwright>=1.44,<2.0"]
+graph = [
+    "keybert>=0.8,<1.0",
+    "sentence-transformers>=3.0,<4.0",
+    "networkx>=3.3,<4.0",
+    "numpy>=1.26,<3.0",
+]
+parquet = ["pyarrow>=16.0,<20.0"]
+
+[project.scripts]
+star-crawl = "star_crawl.cli:app"
+
+[project.urls]
+Homepage = "https://github.com/baotran8810/star_crawl"
+Repository = "https://github.com/baotran8810/star_crawl"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/star_crawl"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "SIM", "RET"]
+ignore = ["E501"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["star_crawl"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+markers = [
+    "unit: unit tests (fast, no I/O)",
+    "integration: integration tests (DB, fixtures)",
+    "extract: extractor tests against fixture HTML",
+    "skip_if_no_playwright: skip when playwright is not installed",
+]
+
+[tool.coverage.run]
+source = ["src/star_crawl"]
+branch = true
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "if TYPE_CHECKING:",
+    "raise NotImplementedError",
+]
+
+[tool.mypy]
+python_version = "3.11"
+strict_optional = true
+warn_unused_ignores = true
+ignore_missing_imports = true
