@@ -1,0 +1,14 @@
+name: netflix_techblog
+display_name: Netflix Tech Blog
+base_url: https://netflixtechblog.com
+fetcher: http
+seed:
+  strategy: rss
+  url: https://netflixtechblog.com/feed
+url_filter: '^https://netflixtechblog\.com/[a-z0-9-]+'
+rate_limit:
+  rps: 1.0
+  concurrency: 3
+categories:
+  - engineering
+  - data

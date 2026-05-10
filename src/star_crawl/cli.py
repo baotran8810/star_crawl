@@ -9,7 +9,7 @@ from rich.console import Console
 from rich.table import Table
 
 from star_crawl.db import migrate as db_migrate
-from star_crawl.sources.loader import SourceLoadError, load_all
+from star_crawl.sources.loader import SourceLoadError, load_all, load_one_by_name
 
 app = typer.Typer(
     name="star-crawl",
@@ -199,6 +199,160 @@ def stats(
         for row in by_source:
             table.add_row(row["source_name"], str(row["n"]))
         console.print(table)
+
+
+@app.command()
+def refresh(
+    source_name: str = typer.Argument(...),
+    data_dir: str | None = typer.Option(None, "--data-dir"),
+    config_dir: str = typer.Option("configs/sources", "--config-dir"),
+) -> None:
+    """Re-fetch articles for a source (e.g., after extractor improvement)."""
+    import asyncio as _asyncio
+
+    from star_crawl.core import pipeline
+
+    try:
+        cfg = load_one_by_name(source_name, Path(config_dir))
+    except SourceLoadError as e:
+        err_console.print(f"[red]error:[/red] {e}")
+        raise typer.Exit(code=3) from None
+
+    path = _data_dir(data_dir)
+    db_migrate.migrate(path)
+    res = _asyncio.run(pipeline.refresh_articles(cfg, data_dir=path))
+    console.print(
+        f"refresh {source_name}: {res.status} +{res.extracted_new} new, "
+        f"{res.extracted_dup} dup, {res.error_count} err"
+    )
+
+
+@app.command()
+def export(
+    fmt: str = typer.Argument(..., help="jsonl | parquet"),
+    out: str = typer.Option(..., "--out"),
+    source: str | None = typer.Option(None, "--source"),
+    data_dir: str | None = typer.Option(None, "--data-dir"),
+) -> None:
+    """Export articles to JSONL or Parquet."""
+    from star_crawl.db.connection import connect
+
+    if fmt not in ("jsonl", "parquet"):
+        err_console.print(f"[red]error:[/red] unknown format '{fmt}'")
+        raise typer.Exit(code=3)
+
+    path = _data_dir(data_dir)
+    out_path = Path(out)
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+
+    conn = connect(path)
+    try:
+        params: list[object] = []
+        where = ""
+        if source:
+            where = "WHERE source_name = ?"
+            params.append(source)
+        rows = conn.execute(
+            f"SELECT * FROM articles {where} ORDER BY id", params
+        ).fetchall()
+    finally:
+        conn.close()
+
+    if fmt == "jsonl":
+        import json
+
+        with open(out_path, "w", encoding="utf-8") as f:
+            for r in rows:
+                d = dict(r)
+                f.write(json.dumps(d, default=str, ensure_ascii=False) + "\n")
+        console.print(f"wrote [green]{len(rows)}[/green] articles → {out_path}")
+        return
+
+    try:
+        import pyarrow as pa
+        import pyarrow.parquet as pq
+    except ImportError:
+        err_console.print(
+            "[red]error:[/red] parquet export requires the [parquet] extra: "
+            "pip install -e '.[parquet]'"
+        )
+        raise typer.Exit(code=3) from None
+
+    if not rows:
+        console.print("[dim]no articles to export[/dim]")
+        return
+
+    cols = list(rows[0].keys())
+    data = {c: [r[c] for r in rows] for c in cols}
+    table = pa.table(data)
+    pq.write_table(table, out_path)
+    console.print(f"wrote [green]{len(rows)}[/green] articles → {out_path}")
+
+
+@db_app.command("inspect")
+def db_inspect(
+    target: str = typer.Argument(..., help="run-history | errors"),
+    source: str | None = typer.Option(None, "--source"),
+    run: int | None = typer.Option(None, "--run"),
+    limit: int = typer.Option(20, "--limit"),
+    data_dir: str | None = typer.Option(None, "--data-dir"),
+) -> None:
+    """Read-only DB queries for ops."""
+    from star_crawl.db.connection import connect
+
+    path = _data_dir(data_dir)
+    conn = connect(path, read_only=True)
+    try:
+        if target == "run-history":
+            params: list[object] = []
+            where = ""
+            if source:
+                where = "WHERE source_name = ?"
+                params.append(source)
+            rows = conn.execute(
+                f"""SELECT id, source_name, started_at, status, discovered,
+                           extracted_new, error_count
+                      FROM crawl_runs {where}
+                     ORDER BY started_at DESC LIMIT ?""",
+                [*params, limit],
+            ).fetchall()
+            table = Table(title="Run history")
+            table.add_column("ID", justify="right")
+            table.add_column("Source")
+            table.add_column("Started")
+            table.add_column("Status")
+            table.add_column("Disc", justify="right")
+            table.add_column("New", justify="right")
+            table.add_column("Err", justify="right")
+            for r in rows:
+                table.add_row(
+                    str(r["id"]), r["source_name"], r["started_at"][:16],
+                    r["status"], str(r["discovered"]),
+                    str(r["extracted_new"]), str(r["error_count"]),
+                )
+            console.print(table)
+        elif target == "errors":
+            if run is None:
+                err_console.print("[red]error:[/red] --run is required for errors")
+                raise typer.Exit(code=3)
+            rows = conn.execute(
+                """SELECT url, kind, message, occurred_at FROM errors
+                    WHERE run_id = ? ORDER BY occurred_at LIMIT ?""",
+                (run, limit),
+            ).fetchall()
+            table = Table(title=f"Errors for run #{run}")
+            table.add_column("Time")
+            table.add_column("Kind")
+            table.add_column("URL", style="dim")
+            table.add_column("Message")
+            for r in rows:
+                table.add_row(r["occurred_at"][:16], r["kind"], r["url"], r["message"])
+            console.print(table)
+        else:
+            err_console.print(f"[red]error:[/red] unknown target '{target}'")
+            raise typer.Exit(code=3)
+    finally:
+        conn.close()
 
 
 @app.command()

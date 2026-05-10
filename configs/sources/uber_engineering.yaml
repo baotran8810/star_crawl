@@ -1,0 +1,19 @@
+name: uber_engineering
+display_name: Uber Engineering
+base_url: https://www.uber.com/us/en/blog/engineering/
+fetcher: http
+seed:
+  strategy: pagination
+  template: https://www.uber.com/us/en/blog/engineering/page/{n}/
+  range: [1, 63]
+url_filter: '^https://www\.uber\.com/us/en/blog/[^/]+/$'
+rate_limit:
+  rps: 1.0
+  concurrency: 5
+extract:
+  primary: trafilatura
+  fallback: readability
+  parse_jsonld: true
+  min_word_count: 100
+categories:
+  - engineering

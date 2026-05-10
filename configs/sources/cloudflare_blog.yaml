@@ -1,0 +1,15 @@
+name: cloudflare_blog
+display_name: Cloudflare Blog
+base_url: https://blog.cloudflare.com
+fetcher: http
+seed:
+  strategy: rss
+  url: https://blog.cloudflare.com/rss/
+url_filter: '^https://blog\.cloudflare\.com/[^/]+/?$'
+rate_limit:
+  rps: 1.0
+  concurrency: 3
+categories:
+  - engineering
+  - networking
+  - security
