@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}{{ article.title }} · star_crawl{% endblock %}
+{% block body %}
+
+<article class="article-grid">
+<div class="article-body">
+  <p class="muted">
+    <span class="pill">{{ article.source_name }}</span>
+    {% if article.published_at %}· {{ article.published_at[:10] }}{% endif %}
+    · {{ article.word_count }} words
+  </p>
+  <h1>{{ article.title }}</h1>
+  {% if article.author %}<p class="byline">By <strong>{{ article.author }}</strong></p>{% endif %}
+
+  <div class="prose">
+    {{ article.content_md | md | safe }}
+  </div>
+</div>
+
+<aside class="meta-panel">
+  <h3>Metadata</h3>
+  <dl>
+    <dt>Source</dt><dd>{{ article.source_display_name }}</dd>
+    <dt>URL</dt><dd><a href="{{ article.url }}" target="_blank" rel="noopener noreferrer">{{ article.url }}</a></dd>
+    <dt>Crawled</dt><dd>{{ article.crawled_at[:16] }}</dd>
+    {% if article.published_at %}<dt>Published</dt><dd>{{ article.published_at[:16] }}</dd>{% endif %}
+    {% if article.lang %}<dt>Lang</dt><dd>{{ article.lang }}</dd>{% endif %}
+    <dt>Word count</dt><dd>{{ article.word_count }}</dd>
+    <dt>Hash</dt><dd class="mono">{{ article.content_hash[:12] }}…</dd>
+  </dl>
+</aside>
+</article>
+
+{% endblock %}

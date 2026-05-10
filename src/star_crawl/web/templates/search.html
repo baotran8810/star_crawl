@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Search · star_crawl{% endblock %}
+{% block body %}
+<header class="page-head">
+  <h1>Search</h1>
+  {% if q %}
+    <p class="muted">Results for "<strong>{{ q }}</strong>" · {{ total }} matches</p>
+  {% else %}
+    <p class="muted">Type a query to search across titles and content.</p>
+  {% endif %}
+</header>
+
+<div id="search-results">
+{% include "partials/search_results.html" %}
+</div>
+{% endblock %}

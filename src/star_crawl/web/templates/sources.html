@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Sources · star_crawl{% endblock %}
+{% block body %}
+<header class="page-head"><h1>Sources</h1>
+  <p class="muted">{{ sources|length }} configured.</p>
+</header>
+
+<div class="src-grid">
+  {% for s in sources %}
+  <a href="/sources/{{ s.name }}" class="src-card">
+    <div class="top">
+      <span class="name">{{ s.display_name }}</span>
+      {% if s.policy_opt_in %}<span class="pill warn">opt-in</span>{% endif %}
+    </div>
+    <div class="count">{{ s.article_count }}<small>articles</small></div>
+    <div class="meta">
+      <span>{{ s.fetcher }} · {{ s.seed_strategy }}</span>
+      <span>{{ s.last_crawled_at[:16] if s.last_crawled_at else '—' }}</span>
+    </div>
+  </a>
+  {% endfor %}
+</div>
+{% if not sources %}
+<div class="empty-state">
+  <h2>No sources configured</h2>
+  <p>Drop a YAML file in <code>configs/sources/</code> and run <code>star-crawl run &lt;name&gt;</code>.</p>
+</div>
+{% endif %}
+{% endblock %}

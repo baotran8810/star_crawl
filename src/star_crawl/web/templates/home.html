@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}Dashboard · star_crawl{% endblock %}
+{% block body %}
+
+<header class="page-head">
+  <h1>Overview</h1>
+  <p class="muted">Tổng quan corpus — cập nhật mỗi crawl run.</p>
+</header>
+
+{% if total_articles == 0 %}
+<div class="empty-state">
+  <h2>No articles yet</h2>
+  <p>Run <code>star-crawl run --all</code> from the CLI to populate the corpus, or
+     <code>star-crawl run grab_engineering</code> for a quick test.</p>
+</div>
+{% else %}
+<section class="stats">
+  <div class="stat"><div class="label">Total articles</div><div class="value">{{ total_articles }}</div></div>
+  <div class="stat"><div class="label">Sources</div><div class="value">{{ sources|length }}</div></div>
+  {% if last_run %}
+  <div class="stat"><div class="label">Last run</div><div class="value">{{ last_run.started_at[:16] }}</div></div>
+  {% endif %}
+</section>
+
+<section>
+  <div class="section-h"><h2>Sources</h2><a href="/sources" class="more">All →</a></div>
+  <div class="src-grid">
+    {% for s in sources %}
+    <a href="/sources/{{ s.name }}" class="src-card">
+      <div class="top"><span class="name">{{ s.display_name }}</span></div>
+      <div class="count">{{ s.article_count }}<small>articles</small></div>
+      <div class="meta">
+        <span>{{ s.last_crawled_at[:16] if s.last_crawled_at else '—' }}</span>
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+</section>
+
+<section>
+  <div class="section-h"><h2>Recent runs</h2></div>
+  <div class="run-list">
+    {% for r in recent_runs %}
+    <div class="run-row">
+      <span class="ts">{{ r.started_at[:16] }}</span>
+      <span class="name">{{ r.source_name }}</span>
+      <span class="pill {{ r.status }}">{{ r.status }}</span>
+      <span class="meta">+{{ r.extracted_new }} new · {{ r.discovered }} disc · {{ r.error_count }} err</span>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+{% endblock %}

@@ -1,0 +1,20 @@
+{% if not q %}
+  <p class="muted">Start typing in the header search box.</p>
+{% elif total == 0 %}
+  <p class="muted">No matches for "<strong>{{ q }}</strong>".</p>
+{% else %}
+  <div class="search-list">
+  {% for r in results %}
+    <article class="search-result">
+      <div class="src mono">{{ r.source_name }} · {{ r.published_at[:10] if r.published_at else '—' }} · {{ r.word_count }} words</div>
+      <h3><a href="/articles/{{ r.id }}">{{ r.title }}</a></h3>
+      <p class="snip">{{ r.snippet | safe }}</p>
+    </article>
+  {% endfor %}
+  </div>
+  {% if total > page_size %}
+  <nav class="pagi">
+    <span class="muted">page {{ page }} · {{ total }} total</span>
+  </nav>
+  {% endif %}
+{% endif %}

@@ -28,11 +28,13 @@ def connect(
     path = db_path(data_dir)
     path.parent.mkdir(parents=True, exist_ok=True)
 
+    # check_same_thread=False is safe because: write path holds connections
+    # in async event loop (one task per conn); read path uses per-request conn.
     if read_only:
         uri = f"file:{path}?mode=ro&immutable=0"
-        conn = sqlite3.connect(uri, uri=True, timeout=timeout)
+        conn = sqlite3.connect(uri, uri=True, timeout=timeout, check_same_thread=False)
     else:
-        conn = sqlite3.connect(path, timeout=timeout)
+        conn = sqlite3.connect(path, timeout=timeout, check_same_thread=False)
         conn.executescript(
             """
             PRAGMA journal_mode = WAL;

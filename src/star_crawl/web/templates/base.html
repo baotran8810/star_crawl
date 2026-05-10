@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block title %}star_crawl{% endblock %}</title>
+<link rel="stylesheet" href="/static/styles.css">
+<script src="/static/vendor/htmx.min.js" defer></script>
+</head>
+<body>
+<nav class="topnav">
+  <a class="logo" href="/">star_<em>crawl</em></a>
+  <div class="links">
+    <a href="/" class="{% if request.url.path == '/' %}active{% endif %}">Dashboard</a>
+    <a href="/sources" class="{% if '/sources' in request.url.path %}active{% endif %}">Sources</a>
+    <a href="/runs" class="{% if '/runs' in request.url.path %}active{% endif %}">Runs</a>
+  </div>
+  <form action="/search" method="get" class="searchbox">
+    <input type="search" name="q" placeholder="Search title or content…"
+           value="{{ q or '' }}"
+           hx-get="/search" hx-target="#search-results" hx-trigger="keyup changed delay:300ms, search"
+           hx-include="[name='source']" autocomplete="off">
+    <kbd>/</kbd>
+  </form>
+</nav>
+<main>
+{% block body %}{% endblock %}
+</main>
+<script>
+document.addEventListener('keydown', function(e) {
+  if (e.key === '/' && !['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) {
+    e.preventDefault();
+    document.querySelector('input[name="q"]').focus();
+  }
+});
+</script>
+</body>
+</html>

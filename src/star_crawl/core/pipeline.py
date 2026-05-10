@@ -51,6 +51,7 @@ async def run_source(
         conn = sink.open_writer(data_dir)
         try:
             sink.finish_run(conn, run_id, "skipped", 0, 0, 0, 0)
+            conn.commit()
         finally:
             conn.close()
         return RunResult(
@@ -137,6 +138,7 @@ async def run_source(
     conn = sink.open_writer(data_dir)
     try:
         sink.finish_run(conn, run_id, status, discovered, new_count, dup_count, error_count)
+        conn.commit()
     finally:
         conn.close()
 

@@ -1,0 +1,26 @@
+<table class="list">
+<thead>
+<tr><th>Title</th><th>Author</th><th>Published</th><th>Lang</th><th>Words</th></tr>
+</thead>
+<tbody>
+{% for a in articles %}
+<tr>
+  <td class="title"><a href="/articles/{{ a.id }}">{{ a.title }}</a></td>
+  <td>{{ a.author or '—' }}</td>
+  <td class="mono">{{ a.published_at[:10] if a.published_at else '—' }}</td>
+  <td>{% if a.lang %}<span class="pill muted">{{ a.lang }}</span>{% else %}—{% endif %}</td>
+  <td class="num">{{ a.word_count }}</td>
+</tr>
+{% endfor %}
+{% if not articles %}
+<tr><td colspan="5" class="empty">No articles match these filters.</td></tr>
+{% endif %}
+</tbody>
+</table>
+{% if pages > 1 %}
+<nav class="pagi">
+{% if page > 1 %}<a class="pg" hx-get="?page={{ page - 1 }}&lang={{ filters.lang or '' }}&sort={{ filters.sort }}&order={{ filters.order }}" hx-target="closest tbody">‹</a>{% endif %}
+<span class="muted">page {{ page }} / {{ pages }} · {{ total }} total</span>
+{% if page < pages %}<a class="pg" hx-get="?page={{ page + 1 }}&lang={{ filters.lang or '' }}&sort={{ filters.sort }}&order={{ filters.order }}" hx-target="closest tbody">›</a>{% endif %}
+</nav>
+{% endif %}

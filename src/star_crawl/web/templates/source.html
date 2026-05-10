@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}{{ source.display_name }} · star_crawl{% endblock %}
+{% block body %}
+
+<header class="page-head">
+  <p class="crumb"><a href="/sources">Sources</a> /</p>
+  <h1>{{ source.display_name }}</h1>
+  <p class="muted">{{ source.article_count }} articles · last crawl {{ source.last_crawled_at[:16] if source.last_crawled_at else 'never' }}</p>
+</header>
+
+<form method="get" class="filterbar" hx-get="" hx-target="tbody" hx-trigger="change">
+  <label>Lang
+    <select name="lang">
+      <option value="">all</option>
+      <option value="en" {% if filters.lang == 'en' %}selected{% endif %}>en</option>
+    </select>
+  </label>
+  <label>Sort
+    <select name="sort">
+      <option value="published_at" {% if filters.sort == 'published_at' %}selected{% endif %}>published</option>
+      <option value="title" {% if filters.sort == 'title' %}selected{% endif %}>title</option>
+    </select>
+  </label>
+  <label>Order
+    <select name="order">
+      <option value="desc" {% if filters.order == 'desc' %}selected{% endif %}>desc</option>
+      <option value="asc" {% if filters.order == 'asc' %}selected{% endif %}>asc</option>
+    </select>
+  </label>
+</form>
+
+{% include "partials/article_table.html" %}
+
+{% endblock %}

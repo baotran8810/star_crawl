@@ -202,6 +202,36 @@ def stats(
 
 
 @app.command()
+def serve(
+    host: str = typer.Option("127.0.0.1", "--host"),
+    port: int = typer.Option(8000, "--port"),
+    data_dir: str | None = typer.Option(None, "--data-dir"),
+) -> None:
+    """Start the read-only web UI."""
+    import os
+
+    from star_crawl.web.auth import auth_enabled
+
+    if host not in ("127.0.0.1", "localhost", "::1") and not auth_enabled():
+        err_console.print(
+            "[red]error:[/red] exposed mode requires STAR_CRAWL_AUTH=user:pass to be set in env."
+        )
+        err_console.print("Either bind to 127.0.0.1 or set credentials and try again.")
+        raise typer.Exit(code=3)
+
+    if data_dir:
+        os.environ["STAR_CRAWL_DATA_DIR"] = data_dir
+
+    if auth_enabled():
+        console.print("[green]auth enabled[/green] (basic auth from STAR_CRAWL_AUTH)")
+    console.print(f"Listening on http://{host}:{port}")
+
+    import uvicorn
+
+    uvicorn.run("star_crawl.web.app:app", host=host, port=port, log_level="info")
+
+
+@app.command()
 def version() -> None:
     """Print version."""
     from star_crawl import __version__
