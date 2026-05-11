@@ -55,6 +55,36 @@ def keyword_count(conn: sqlite3.Connection) -> int:
 
 def read_graph(conn: sqlite3.Connection, filters: GraphFilters) -> dict:
     """Return a Cytoscape elements payload {nodes, edges, meta}."""
+    # If source or time filters are set, restrict to keywords that appear in
+    # articles matching those filters.
+    article_filter_active = bool(filters.sources or filters.since or filters.until)
+    if article_filter_active:
+        a_where: list[str] = []
+        a_params: list[object] = []
+        if filters.sources:
+            placeholders = ",".join(["?"] * len(filters.sources))
+            a_where.append(f"source_name IN ({placeholders})")
+            a_params.extend(filters.sources)
+        if filters.since:
+            a_where.append("(published_at >= ? OR (published_at IS NULL AND crawled_at >= ?))")
+            a_params.extend([filters.since, filters.since])
+        if filters.until:
+            a_where.append("(published_at <= ? OR (published_at IS NULL AND crawled_at <= ?))")
+            a_params.extend([filters.until, filters.until])
+        a_clause = "WHERE " + " AND ".join(a_where)
+        allowed_kw_rows = conn.execute(
+            f"""SELECT DISTINCT ak.keyword_id
+                  FROM article_keywords ak
+                  JOIN articles a ON a.id = ak.article_id
+                  {a_clause}""",
+            a_params,
+        ).fetchall()
+        allowed_kw_ids = {int(r["keyword_id"]) for r in allowed_kw_rows}
+        if not allowed_kw_ids:
+            allowed_kw_ids = {-1}  # sentinel: nothing will match
+    else:
+        allowed_kw_ids = None
+
     nodes_sql = """
         SELECT k.id, k.term, k.display, k.doc_freq, k.cluster_id,
                c.label  AS cluster_label,
@@ -67,6 +97,10 @@ def read_graph(conn: sqlite3.Connection, filters: GraphFilters) -> dict:
     if filters.cluster is not None:
         nodes_sql += " AND k.cluster_id = ?"
         params.append(filters.cluster)
+    if allowed_kw_ids is not None:
+        placeholders = ",".join(["?"] * len(allowed_kw_ids))
+        nodes_sql += f" AND k.id IN ({placeholders})"
+        params.extend(allowed_kw_ids)
 
     node_rows = conn.execute(nodes_sql, params).fetchall()
     node_ids = {int(r["id"]) for r in node_rows}
@@ -133,6 +167,9 @@ def read_graph(conn: sqlite3.Connection, filters: GraphFilters) -> dict:
         "min_npmi": filters.min_npmi,
         "cluster": filters.cluster,
         "focus": filters.focus,
+        "sources": list(filters.sources) if filters.sources else None,
+        "since": filters.since,
+        "until": filters.until,
     }
     return {"nodes": nodes, "edges": edges, "meta": meta}
 

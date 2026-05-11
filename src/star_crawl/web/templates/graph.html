@@ -30,23 +30,47 @@
       <div id="kw-suggestions"></div>
     </div>
 
-    <form id="filter-form">
+    <form id="filter-form"
+          hx-get="/graph.json"
+          hx-trigger="change from:#filter-form"
+          hx-target="#cy-data"
+          hx-swap="innerHTML">
       <label>
         <span>Min frequency</span>
         <input type="range" name="min_freq" min="1" max="20" value="{{ filters.min_freq }}"
-               hx-get="/graph.json" hx-trigger="change"
-               hx-target="#cy-data" hx-swap="innerHTML"
                oninput="document.getElementById('mf-out').textContent = this.value">
         <output id="mf-out">{{ filters.min_freq }}</output>
       </label>
       <label>
         <span>Min NPMI</span>
         <input type="range" name="min_npmi" min="0" max="0.6" step="0.05" value="{{ filters.min_npmi }}"
-               hx-get="/graph.json" hx-trigger="change"
-               hx-target="#cy-data" hx-swap="innerHTML"
                oninput="document.getElementById('np-out').textContent = this.value">
         <output id="np-out">{{ filters.min_npmi }}</output>
       </label>
+
+      {% if available_sources %}
+      <fieldset>
+        <legend>Sources</legend>
+        {% for s in available_sources %}
+        <label class="checkbox">
+          <input type="checkbox" name="source" value="{{ s.name }}"
+                 {% if not filters.sources or s.name in filters.sources %}checked{% endif %}>
+          <span>{{ s.display_name }} <small class="muted">({{ s.article_count }})</small></span>
+        </label>
+        {% endfor %}
+      </fieldset>
+      {% endif %}
+
+      <label>
+        <span>Since</span>
+        <input type="date" name="since" value="{{ filters.since or '' }}">
+      </label>
+      <label>
+        <span>Until</span>
+        <input type="date" name="until" value="{{ filters.until or '' }}">
+      </label>
+
+      <button type="button" class="pill" onclick="resetGraphFilters()">Reset</button>
     </form>
 
     <details class="legend">

@@ -390,3 +390,32 @@ table.list .empty { text-align: center; color: var(--muted); padding: 2rem; }
 .callout.warn {
   border-left-color: var(--warn); background: var(--warn-soft);
 }
+
+/* US3 filter form additions */
+#filter-form fieldset {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.5rem 0.7rem;
+  margin: 0.6rem 0;
+}
+#filter-form legend {
+  font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--muted); padding: 0 0.3rem;
+}
+#filter-form label.checkbox {
+  display: flex; align-items: center; gap: 0.4rem;
+  font-size: 0.8rem; color: var(--text); margin: 0.2rem 0;
+}
+#filter-form label.checkbox span small {
+  margin-left: 0.2rem;
+}
+#filter-form input[type="date"] {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 6px; padding: 0.25rem 0.5rem; font: inherit;
+  font-size: 0.8rem; color: var(--text); width: 100%;
+}
+#filter-form button.pill {
+  margin-top: 0.5rem; cursor: pointer;
+  background: var(--accent-soft); color: var(--accent);
+  border: 1px solid color-mix(in oklch, var(--accent) 30%, transparent);
+}

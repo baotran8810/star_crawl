@@ -348,6 +348,75 @@ def graph_relabel_cmd(
     console.print(f"cluster {cluster_id} → [cyan]{label}[/cyan]")
 
 
+@graph_app.command("export")
+def graph_export_cmd(
+    fmt: str = typer.Argument(..., help="graphml | json | png"),
+    out: str = typer.Option(..., "--out"),
+    source: list[str] | None = typer.Option(None, "--source"),
+    since: str | None = typer.Option(None, "--since"),
+    until: str | None = typer.Option(None, "--until"),
+    min_freq: int = typer.Option(3, "--min-freq"),
+    min_npmi: float = typer.Option(0.15, "--min-npmi"),
+    cluster: int | None = typer.Option(None, "--cluster"),
+    data_dir: str | None = typer.Option(None, "--data-dir"),
+    server_url: str = typer.Option(
+        "http://127.0.0.1:8000", "--server-url",
+        help="(png only) URL of a running star-crawl serve",
+    ),
+) -> None:
+    """Export the current graph view to GraphML / JSON / PNG."""
+    from star_crawl.db.connection import connect
+    from star_crawl.graph import export as gexport
+    from star_crawl.graph.repository import GraphFilters, read_graph
+
+    if fmt not in ("graphml", "json", "png"):
+        err_console.print(f"[red]error:[/red] unknown format '{fmt}'")
+        raise typer.Exit(code=3)
+
+    out_path = Path(out)
+    path = _data_dir(data_dir)
+
+    if fmt in ("graphml", "json"):
+        conn = connect(path, read_only=True)
+        try:
+            filters = GraphFilters(
+                sources=source, since=since, until=until,
+                min_freq=min_freq, min_npmi=min_npmi, cluster=cluster,
+            )
+            payload = read_graph(conn, filters)
+        finally:
+            conn.close()
+        if fmt == "json":
+            size = gexport.to_cytoscape_json(payload, out_path)
+        else:
+            size = gexport.to_graphml(payload, out_path)
+        console.print(
+            f"wrote [green]{len(payload['nodes'])}[/green] nodes / "
+            f"[green]{len(payload['edges'])}[/green] edges "
+            f"→ {out_path} ({size:,} bytes)"
+        )
+        return
+
+    # png
+    query_parts: list[str] = [f"min_freq={min_freq}", f"min_npmi={min_npmi}"]
+    if source:
+        for s in source:
+            query_parts.append(f"source={s}")
+    if since:
+        query_parts.append(f"since={since}")
+    if until:
+        query_parts.append(f"until={until}")
+    if cluster is not None:
+        query_parts.append(f"cluster={cluster}")
+    query_string = "&".join(query_parts)
+    try:
+        size = gexport.to_png(server_url, query_string, out_path)
+    except RuntimeError as e:
+        err_console.print(f"[red]error:[/red] {e}")
+        raise typer.Exit(code=3) from None
+    console.print(f"wrote screenshot → {out_path} ({size:,} bytes)")
+
+
 @app.command()
 def stats(
     data_dir: str | None = typer.Option(None, "--data-dir"),

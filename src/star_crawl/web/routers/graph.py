@@ -58,6 +58,10 @@ async def graph_page(
         )
 
     payload = read_graph(conn, filters)
+    available_sources = conn.execute(
+        """SELECT name, display_name, article_count FROM sources
+           WHERE article_count > 0 ORDER BY article_count DESC"""
+    ).fetchall()
     return templates.TemplateResponse(
         request=request,
         name="graph.html",
@@ -65,6 +69,7 @@ async def graph_page(
             "payload_json": json.dumps(payload),
             "meta": payload["meta"],
             "filters": filters,
+            "available_sources": available_sources,
         },
     )
 

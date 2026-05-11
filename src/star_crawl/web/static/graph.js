@@ -56,17 +56,38 @@
     ],
   });
 
+  function focusNode(node) {
+    cy.elements().removeClass('faded');
+    const visible = node.closedNeighborhood();
+    cy.elements().difference(visible).addClass('faded');
+    cy.animate(
+      { fit: { eles: visible, padding: 60 } },
+      { duration: 300 }
+    );
+  }
+
   cy.on('tap', 'node', function (evt) {
     const node = evt.target;
     const kwId = node.data('kw_id');
     if (!kwId) return;
-    cy.elements().removeClass('faded');
-    const visible = node.closedNeighborhood();
-    cy.elements().difference(visible).addClass('faded');
+    focusNode(node);
     htmx.ajax('GET', '/keywords/' + kwId, { target: '#keyword-panel', swap: 'innerHTML' });
   });
   cy.on('tap', function (evt) {
     if (evt.target === cy) cy.elements().removeClass('faded');
+  });
+
+  // Focus a node when the user picks one from the type-ahead search results
+  // or a neighbor in the side panel (both render <a data-kw-id="...">).
+  document.body.addEventListener('click', function (e) {
+    const link = e.target.closest('a[data-kw-id]');
+    if (!link) return;
+    const kwId = link.dataset.kwId;
+    const node = cy.getElementById('k_' + kwId);
+    if (node && node.nonempty()) {
+      focusNode(node);
+    }
+    // HTMX continues to load the side-panel via the element's hx-get.
   });
 
   // Refresh elements when filter HTMX swaps the data div
@@ -76,4 +97,16 @@
     cy.json({ elements: { nodes: payload.nodes || [], edges: payload.edges || [] } });
     cy.layout({ name: 'fcose', animate: false, randomize: false }).run();
   });
+
+  // Reset filter form helper — wired from the template's Reset button
+  window.resetGraphFilters = function () {
+    const form = document.getElementById('filter-form');
+    if (!form) return;
+    form.reset();
+    form.querySelectorAll('output').forEach(function (out) {
+      const input = form.querySelector('input[name="' + out.id.replace('-out', '') + '"]');
+      if (input) out.textContent = input.value;
+    });
+    htmx.trigger(form, 'change');
+  };
 })();
