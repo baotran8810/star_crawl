@@ -27,6 +27,45 @@ async def list_sources(request: Request, conn: sqlite3.Connection = Depends(get_
     )
 
 
+@router.get("/sources/{name}/articles")
+async def source_articles_column(
+    name: str,
+    request: Request,
+    page: int = 1,
+    conn: sqlite3.Connection = Depends(get_conn),
+):
+    """Finder column 2: list of articles for one source (HTMX target)."""
+    src = conn.execute("SELECT * FROM sources WHERE name = ?", (name,)).fetchone()
+    if src is None:
+        raise HTTPException(status_code=404, detail=f"source '{name}' not configured")
+
+    page = max(1, page)
+    offset = (page - 1) * PAGE_SIZE
+    total = conn.execute(
+        "SELECT COUNT(*) FROM articles WHERE source_name = ?", (name,),
+    ).fetchone()[0]
+    rows = conn.execute(
+        """SELECT id, title, author, published_at, lang, word_count
+             FROM articles WHERE source_name = ?
+            ORDER BY published_at DESC, id DESC
+            LIMIT ? OFFSET ?""",
+        (name, PAGE_SIZE, offset),
+    ).fetchall()
+    pages = max(1, math.ceil(total / PAGE_SIZE))
+    templates = request.app.state.templates
+    return templates.TemplateResponse(
+        request=request,
+        name="partials/finder_articles.html",
+        context={
+            "source": src,
+            "articles": rows,
+            "page": page,
+            "pages": pages,
+            "total": total,
+        },
+    )
+
+
 @router.get("/sources/{name}")
 async def source_detail(
     name: str,

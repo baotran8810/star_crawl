@@ -23,7 +23,11 @@ class SitemapSeeder:
         async with httpx.AsyncClient(
             follow_redirects=True,
             timeout=30.0,
-            headers={"User-Agent": source.policy.user_agent},
+            headers={
+                "User-Agent": source.policy.user_agent,
+                "Accept": "application/xml, text/xml, application/rss+xml, */*;q=0.5",
+                "Accept-Encoding": "gzip, deflate, br",
+            },
         ) as client:
             seen: set[str] = set()
             async for url in self._walk(

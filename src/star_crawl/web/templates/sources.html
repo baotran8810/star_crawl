@@ -1,25 +1,68 @@
 {% extends "base.html" %}
 {% block title %}Sources · star_crawl{% endblock %}
 {% block body %}
-<header class="page-head"><h1>Sources</h1>
-  <p class="muted">{{ sources|length }} configured.</p>
+<header class="page-head">
+  <h1>Sources</h1>
+  <p class="muted">{{ sources|length }} configured. Click a source → click an article — like Finder.</p>
 </header>
 
-<div class="src-grid">
-  {% for s in sources %}
-  <a href="/sources/{{ s.name }}" class="src-card">
-    <div class="top">
-      <span class="name">{{ s.display_name }}</span>
-      {% if s.policy_opt_in %}<span class="pill warn">opt-in</span>{% endif %}
-    </div>
-    <div class="count">{{ s.article_count }}<small>articles</small></div>
-    <div class="meta">
-      <span>{{ s.fetcher }} · {{ s.seed_strategy }}</span>
-      <span>{{ s.last_crawled_at[:16] if s.last_crawled_at else '—' }}</span>
-    </div>
-  </a>
-  {% endfor %}
+<div class="finder">
+  {# Column 1 — sources #}
+  <aside class="finder-col col-sources">
+    <h4>Sources</h4>
+    <ul class="finder-list">
+      {% for s in sources %}
+      <li>
+        <a href="#" data-finder-row="source"
+           hx-get="/sources/{{ s.name }}/articles"
+           hx-target="#finder-col-articles"
+           hx-swap="innerHTML">
+          <span class="row-main">{{ s.display_name }}</span>
+          <span class="row-meta">
+            {{ s.article_count }}
+            {% if s.policy_opt_in %}<small class="pill warn">opt-in</small>{% endif %}
+          </span>
+          <span class="row-chev">›</span>
+        </a>
+      </li>
+      {% endfor %}
+    </ul>
+  </aside>
+
+  {# Column 2 — articles in the picked source #}
+  <section class="finder-col col-articles" id="finder-col-articles">
+    <div class="finder-empty"><p>Pick a source on the left.</p></div>
+  </section>
+
+  {# Column 3 — article preview #}
+  <section class="finder-col col-preview" id="finder-col-preview">
+    <div class="finder-empty"><p>Pick an article to preview.</p></div>
+  </section>
 </div>
+
+<script>
+  // Selected-row highlight per column
+  document.addEventListener('click', function (e) {
+    const row = e.target.closest('a[data-finder-row]');
+    if (!row) return;
+    const list = row.closest('.finder-list');
+    if (list) {
+      list.querySelectorAll('a.selected').forEach(function (el) {
+        el.classList.remove('selected');
+      });
+      row.classList.add('selected');
+    }
+  });
+
+  // When the user picks a new source, blank column 3
+  document.body.addEventListener('htmx:afterSwap', function (e) {
+    if (e.detail.target.id === 'finder-col-articles') {
+      const col3 = document.getElementById('finder-col-preview');
+      col3.innerHTML = '<div class="finder-empty"><p>Pick an article to preview.</p></div>';
+    }
+  });
+</script>
+
 {% if not sources %}
 <div class="empty-state">
   <h2>No sources configured</h2>

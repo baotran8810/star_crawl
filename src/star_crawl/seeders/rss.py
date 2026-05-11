@@ -24,7 +24,11 @@ class RssSeeder:
         async with httpx.AsyncClient(
             follow_redirects=True,
             timeout=30.0,
-            headers={"User-Agent": source.policy.user_agent},
+            headers={
+                "User-Agent": source.policy.user_agent,
+                "Accept": "application/rss+xml, application/atom+xml, application/xml;q=0.9, */*;q=0.8",
+                "Accept-Encoding": "gzip, deflate, br",
+            },
         ) as client:
             resp = await client.get(str(source.seed.url))
             resp.raise_for_status()

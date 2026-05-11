@@ -32,6 +32,8 @@ dependencies = [
     "tldextract>=5.1,<6.0",
     "langdetect>=1.0,<2.0",
     "beautifulsoup4>=4.12,<5.0",
+    "truststore>=0.9,<1.0",
+    "brotli>=1.1,<2.0",
 ]
 
 [project.optional-dependencies]

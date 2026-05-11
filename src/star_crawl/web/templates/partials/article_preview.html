@@ -1,0 +1,32 @@
+{# Column 3 fragment — preview pane for a single article #}
+<div class="preview-shell">
+  <p class="muted">
+    <span class="pill">{{ article.source_name }}</span>
+    {% if article.published_at %}· {{ article.published_at[:10] }}{% endif %}
+    · {{ article.word_count }} words
+  </p>
+  <h3 class="preview-title">{{ article.title }}</h3>
+  {% if article.author %}<p class="byline">By <strong>{{ article.author }}</strong></p>{% endif %}
+
+  <div class="preview-actions">
+    <a class="pill" href="/articles/{{ article.id }}">Open full →</a>
+    <a class="pill muted" href="{{ article.url }}" target="_blank" rel="noopener noreferrer">Source ↗</a>
+  </div>
+
+  <hr>
+
+  <div class="preview-snippet">
+    {{ article.content_md[:1200] | md | safe }}
+    {% if article.content_md|length > 1200 %}
+    <p class="muted"><em>… truncated — open full to read all {{ article.word_count }} words.</em></p>
+    {% endif %}
+  </div>
+
+  <hr>
+  <dl class="preview-meta">
+    <dt>URL</dt><dd class="mono"><a href="{{ article.url }}" target="_blank" rel="noopener noreferrer">{{ article.url }}</a></dd>
+    {% if article.lang %}<dt>Lang</dt><dd>{{ article.lang }}</dd>{% endif %}
+    <dt>Crawled</dt><dd>{{ article.crawled_at[:16] }}</dd>
+    <dt>Hash</dt><dd class="mono">{{ article.content_hash[:12] }}…</dd>
+  </dl>
+</div>

@@ -1,0 +1,39 @@
+{# Column 2 fragment — list of articles for one source #}
+<h4>{{ source.display_name }} <small class="muted">· {{ total }} articles</small></h4>
+
+{% if articles %}
+<ul class="finder-list">
+  {% for a in articles %}
+  <li>
+    <a href="#" data-finder-row="article"
+       hx-get="/articles/{{ a.id }}/preview"
+       hx-target="#finder-col-preview"
+       hx-swap="innerHTML">
+      <span class="row-main">{{ a.title }}</span>
+      <span class="row-meta">
+        {% if a.published_at %}<span class="mono">{{ a.published_at[:10] }}</span>{% endif %}
+        <small class="muted">{{ a.word_count }}w</small>
+      </span>
+      <span class="row-chev">›</span>
+    </a>
+  </li>
+  {% endfor %}
+</ul>
+
+{% if pages > 1 %}
+<nav class="finder-pagi">
+  {% if page > 1 %}
+  <a hx-get="/sources/{{ source.name }}/articles?page={{ page - 1 }}"
+     hx-target="closest .finder-col" hx-swap="innerHTML">‹ prev</a>
+  {% endif %}
+  <span class="muted">{{ page }} / {{ pages }}</span>
+  {% if page < pages %}
+  <a hx-get="/sources/{{ source.name }}/articles?page={{ page + 1 }}"
+     hx-target="closest .finder-col" hx-swap="innerHTML">next ›</a>
+  {% endif %}
+</nav>
+{% endif %}
+
+{% else %}
+<div class="finder-empty"><p>No articles yet for this source.</p></div>
+{% endif %}

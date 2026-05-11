@@ -53,7 +53,15 @@ class HttpFetcher:
                 http2=True,
                 follow_redirects=True,
                 timeout=httpx.Timeout(30.0, connect=10.0),
-                headers={"User-Agent": source.policy.user_agent},
+                headers={
+                    "User-Agent": source.policy.user_agent,
+                    "Accept": (
+                        "text/html,application/xhtml+xml,application/xml;q=0.9,"
+                        "image/avif,image/webp,*/*;q=0.8"
+                    ),
+                    "Accept-Language": "en-US,en;q=0.9",
+                    "Accept-Encoding": "gzip, deflate, br",
+                },
             )
         return self._client
 

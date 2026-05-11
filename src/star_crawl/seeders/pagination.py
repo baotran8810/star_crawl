@@ -33,7 +33,14 @@ class PaginationSeeder:
         async with httpx.AsyncClient(
             follow_redirects=True,
             timeout=30.0,
-            headers={"User-Agent": source.policy.user_agent},
+            headers={
+                "User-Agent": source.policy.user_agent,
+                "Accept": (
+                    "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
+                ),
+                "Accept-Language": "en-US,en;q=0.9",
+                "Accept-Encoding": "gzip, deflate, br",
+            },
         ) as client:
             empty_streak = 0
             for n in range(start, end + 1):

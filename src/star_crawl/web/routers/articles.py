@@ -11,6 +11,29 @@ from star_crawl.web.deps import get_conn
 router = APIRouter()
 
 
+@router.get("/articles/{article_id}/preview")
+async def article_preview(
+    article_id: int,
+    request: Request,
+    conn: sqlite3.Connection = Depends(get_conn),
+):
+    """Finder column 3: condensed preview panel for one article."""
+    row = conn.execute(
+        """SELECT a.*, s.display_name AS source_display_name
+             FROM articles a JOIN sources s ON s.name = a.source_name
+            WHERE a.id = ?""",
+        (article_id,),
+    ).fetchone()
+    if row is None:
+        raise HTTPException(status_code=404, detail=f"article #{article_id} not found")
+    templates = request.app.state.templates
+    return templates.TemplateResponse(
+        request=request,
+        name="partials/article_preview.html",
+        context={"article": row},
+    )
+
+
 @router.get("/articles/{article_id}")
 async def article_detail(
     article_id: int,
