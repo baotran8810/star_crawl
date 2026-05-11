@@ -54,11 +54,26 @@
     }
   });
 
-  // When the user picks a new source, blank column 3
+  // When the user picks a new source, blank column 3 + exit fullscreen
   document.body.addEventListener('htmx:afterSwap', function (e) {
     if (e.detail.target.id === 'finder-col-articles') {
+      document.body.classList.remove('finder-fullscreen');
       const col3 = document.getElementById('finder-col-preview');
       col3.innerHTML = '<div class="finder-empty"><p>Pick an article to preview.</p></div>';
+    }
+  });
+
+  // Fullscreen reader toggle on the preview pane
+  document.addEventListener('click', function (e) {
+    const btn = e.target.closest('[data-action="toggle-fullscreen"]');
+    if (!btn) return;
+    document.body.classList.toggle('finder-fullscreen');
+  });
+
+  // Esc exits fullscreen
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && document.body.classList.contains('finder-fullscreen')) {
+      document.body.classList.remove('finder-fullscreen');
     }
   });
 </script>

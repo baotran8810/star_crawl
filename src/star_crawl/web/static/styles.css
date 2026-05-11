@@ -727,3 +727,105 @@ body:has(.finder-wide) main .finder-wide {
 .finder-wide .preview-shell hr {
   margin: 1.5rem 0;
 }
+
+/* ============ Article-preview toolbar + fullscreen mode ============ */
+.preview-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  display: flex;
+  gap: 0.4rem;
+  padding: 0.6rem 1rem;
+  margin: -1.5rem -2rem 1rem;  /* span the preview-shell padding */
+  background: color-mix(in oklch, var(--surface) 88%, transparent);
+  backdrop-filter: saturate(120%) blur(8px);
+  -webkit-backdrop-filter: saturate(120%) blur(8px);
+  border-bottom: 1px solid var(--border);
+}
+.preview-toolbar .tool-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.7rem;
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font: inherit;
+  font-size: 0.82rem;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 120ms, border-color 120ms, color 120ms;
+}
+.preview-toolbar .tool-btn:hover {
+  background: var(--accent-soft);
+  border-color: color-mix(in oklch, var(--accent) 30%, var(--border));
+  color: var(--accent);
+  text-decoration: none;
+}
+.preview-toolbar .tool-icon {
+  font-size: 1rem;
+  line-height: 1;
+}
+.preview-toolbar .tool-label {
+  display: inline;
+}
+@media (max-width: 700px) {
+  .preview-toolbar .tool-label { display: none; }
+  .preview-toolbar .tool-btn { padding: 0.35rem 0.55rem; }
+}
+
+.preview-head { margin-bottom: 1rem; }
+.preview-head .preview-title {
+  font-family: var(--font-serif);
+  font-size: 1.55rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+  margin: 0.3rem 0 0.5rem;
+}
+
+/* Fullscreen reader — hide top nav, finder header, columns 1+2 */
+body.finder-fullscreen .topnav,
+body.finder-fullscreen .finder-header,
+body.finder-fullscreen .col-sources,
+body.finder-fullscreen .col-articles {
+  display: none !important;
+}
+body.finder-fullscreen main {
+  padding: 0 !important;
+  height: 100vh !important;
+}
+body.finder-fullscreen .finder-wide {
+  grid-template-columns: 1fr !important;
+  border: none !important;
+  border-radius: 0 !important;
+  height: 100vh !important;
+}
+body.finder-fullscreen .finder-col.col-preview {
+  width: 100vw;
+}
+body.finder-fullscreen .preview-shell {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 1rem 2rem 4rem;
+}
+body.finder-fullscreen .preview-toolbar {
+  margin: -1rem -2rem 1.25rem;
+}
+
+/* Visual cue on the fullscreen toggle when active */
+body.finder-fullscreen [data-action="toggle-fullscreen"] {
+  background: var(--accent);
+  color: white;
+  border-color: var(--accent);
+}
+body.finder-fullscreen [data-action="toggle-fullscreen"]:hover {
+  background: color-mix(in oklch, var(--accent) 85%, black);
+  color: white;
+}
+body.finder-fullscreen [data-action="toggle-fullscreen"]::after {
+  content: " (Esc)";
+  font-size: 0.72rem;
+  opacity: 0.85;
+}

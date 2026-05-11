@@ -1,19 +1,32 @@
 {# Column 3 fragment — preview pane for a single article #}
-<div class="preview-shell">
-  <p class="muted">
-    <span class="pill">{{ article.source_name }}</span>
-    {% if article.published_at %}· {{ article.published_at[:10] }}{% endif %}
-    · {{ article.word_count }} words
-  </p>
-  <h3 class="preview-title">{{ article.title }}</h3>
-  {% if article.author %}<p class="byline">By <strong>{{ article.author }}</strong></p>{% endif %}
-
-  <div class="preview-actions">
-    <a class="pill" href="/articles/{{ article.id }}">Open full →</a>
-    <a class="pill muted" href="{{ article.url }}" target="_blank" rel="noopener noreferrer">Source ↗</a>
+<div class="preview-shell" data-article-id="{{ article.id }}">
+  <div class="preview-toolbar">
+    <a class="tool-btn" href="{{ article.url }}" target="_blank" rel="noopener noreferrer"
+       title="Open source in new tab">
+      <span class="tool-icon">↗</span>
+      <span class="tool-label">Open source</span>
+    </a>
+    <button type="button" class="tool-btn" data-action="toggle-fullscreen"
+       title="Toggle fullscreen reader (Esc to exit)">
+      <span class="tool-icon">⤢</span>
+      <span class="tool-label">Fullscreen</span>
+    </button>
+    <a class="tool-btn" href="/articles/{{ article.id }}"
+       title="Open in dedicated article page">
+      <span class="tool-icon">↦</span>
+      <span class="tool-label">Open in page</span>
+    </a>
   </div>
 
-  <hr>
+  <header class="preview-head">
+    <p class="muted">
+      <span class="pill">{{ article.source_name }}</span>
+      {% if article.published_at %}· {{ article.published_at[:10] }}{% endif %}
+      · {{ article.word_count }} words
+    </p>
+    <h2 class="preview-title">{{ article.title }}</h2>
+    {% if article.author %}<p class="byline">By <strong>{{ article.author }}</strong></p>{% endif %}
+  </header>
 
   <div class="preview-snippet prose">
     {{ article.content_md | md | safe }}
