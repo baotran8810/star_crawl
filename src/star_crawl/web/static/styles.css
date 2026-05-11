@@ -615,9 +615,25 @@ table.list .empty { text-align: center; color: var(--muted); padding: 2rem; }
 /* ============ Wider Finder layout ============ */
 /* Override main padding when a finder is on the page so the article
    panel can use the full viewport width. */
+body:has(.finder-wide) {
+  /* The finder bounds its own height; suppress the page-level scrollbar
+     so users perceive a single, column-local scroll. */
+  overflow: hidden;
+}
 body:has(.finder-wide) main {
   max-width: none;
-  padding: 1.25rem 1.5rem 1.5rem;
+  padding: 1.25rem 1.5rem 0;
+  height: calc(100vh - 3.5rem);  /* topnav height ≈ 3.5rem */
+  display: flex;
+  flex-direction: column;
+}
+body:has(.finder-wide) main .finder-header {
+  flex: 0 0 auto;
+}
+body:has(.finder-wide) main .finder-wide {
+  flex: 1 1 auto;
+  height: auto;       /* let flexbox set the height; flex:1 grants it */
+  min-height: 0;      /* allow shrink below content size for scroll children */
 }
 .finder-header {
   margin-bottom: 1rem;
@@ -626,7 +642,10 @@ body:has(.finder-wide) main {
 
 .finder-wide {
   grid-template-columns: 220px 300px minmax(0, 1fr);
-  min-height: calc(100vh - 9rem);  /* leave room for nav + small header */
+  /* Hard bound the finder to the remaining viewport so only the
+     individual columns scroll, not the whole page. */
+  height: calc(100vh - 9rem);
+  min-height: 480px;
 }
 
 @media (max-width: 1100px) {
@@ -635,7 +654,11 @@ body:has(.finder-wide) main {
   }
 }
 @media (max-width: 900px) {
-  .finder-wide { grid-template-columns: 1fr; min-height: auto; }
+  .finder-wide {
+    grid-template-columns: 1fr;
+    height: auto;
+    /* On mobile each column flows naturally and the page scrolls. */
+  }
 }
 
 /* Reading typography for the article preview pane */
