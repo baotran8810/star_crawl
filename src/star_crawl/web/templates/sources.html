@@ -1,12 +1,12 @@
 {% extends "base.html" %}
 {% block title %}Sources · star_crawl{% endblock %}
 {% block body %}
-<header class="page-head">
+<header class="page-head finder-header">
   <h1>Sources</h1>
-  <p class="muted">{{ sources|length }} configured. Click a source → click an article — like Finder.</p>
+  <p class="muted">{{ sources|length }} configured. Click a source → click an article. Scroll inside the right column to read.</p>
 </header>
 
-<div class="finder">
+<div class="finder finder-wide">
   {# Column 1 — sources #}
   <aside class="finder-col col-sources">
     <h4>Sources</h4>

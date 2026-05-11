@@ -15,11 +15,8 @@
 
   <hr>
 
-  <div class="preview-snippet">
-    {{ article.content_md[:1200] | md | safe }}
-    {% if article.content_md|length > 1200 %}
-    <p class="muted"><em>… truncated — open full to read all {{ article.word_count }} words.</em></p>
-    {% endif %}
+  <div class="preview-snippet prose">
+    {{ article.content_md | md | safe }}
   </div>
 
   <hr>
