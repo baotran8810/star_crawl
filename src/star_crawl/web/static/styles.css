@@ -829,3 +829,155 @@ body.finder-fullscreen [data-action="toggle-fullscreen"]::after {
   font-size: 0.72rem;
   opacity: 0.85;
 }
+
+/* ============ Add source form + per-row run button ============ */
+.col-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem 0.5rem;
+  position: sticky;
+  top: 0;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  z-index: 1;
+}
+.col-head h4 {
+  padding: 0;
+  position: static;
+  border: none;
+  background: none;
+}
+.btn-tiny {
+  font-size: 0.72rem;
+  padding: 0.25rem 0.55rem;
+  border-radius: 5px;
+  background: var(--accent);
+  color: white;
+  font-weight: 500;
+  text-decoration: none;
+  border: 1px solid var(--accent);
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+.btn-tiny:hover { text-decoration: none; opacity: 0.92; }
+
+/* Per-row run button overlay */
+.finder-list li.source-row {
+  position: relative;
+}
+.finder-list li.source-row .row-action {
+  position: absolute;
+  right: 0.6rem;
+  top: 50%;
+  transform: translateY(-50%);
+  margin: 0;
+  opacity: 0;
+  transition: opacity 120ms ease;
+}
+.finder-list li.source-row:hover .row-action,
+.finder-list li.source-row a.selected ~ .row-action {
+  opacity: 1;
+}
+.finder-list li.source-row .row-action button {
+  background: var(--surface);
+  color: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: 5px;
+  font-size: 0.72rem;
+  padding: 0.2rem 0.45rem;
+  cursor: pointer;
+  line-height: 1;
+}
+.finder-list li.source-row .row-action button:hover {
+  background: var(--accent);
+  color: white;
+}
+.finder-list li.source-row .row-action button[disabled] {
+  opacity: 0.55;
+  cursor: progress;
+}
+/* Hide the chevron when the run-button is visible so they don't overlap */
+.finder-list li.source-row:hover .row-chev,
+.finder-list li.source-row a.selected .row-chev {
+  visibility: hidden;
+}
+
+/* Form card for /sources/new */
+.form-card {
+  max-width: 720px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.5rem 1.75rem 1.25rem;
+  box-shadow: var(--shadow-sm);
+}
+.form-card label {
+  display: block;
+  margin-bottom: 1.1rem;
+}
+.form-card label > span {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--muted);
+  margin-bottom: 0.35rem;
+}
+.form-card label > span small { font-weight: 400; }
+.form-card input[type="text"],
+.form-card input[type="url"],
+.form-card input[type="number"],
+.form-card input:not([type]),
+.form-card select {
+  width: 100%;
+  padding: 0.55rem 0.75rem;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  font: inherit;
+  font-size: 0.92rem;
+  color: var(--text);
+}
+.form-card input:focus,
+.form-card select:focus {
+  outline: 2px solid color-mix(in oklch, var(--accent) 50%, transparent);
+  outline-offset: -1px;
+  border-color: var(--accent);
+}
+.form-card .form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+@media (max-width: 600px) {
+  .form-card .form-row { grid-template-columns: 1fr; }
+}
+.form-card .field-error {
+  margin: 0.25rem 0 0;
+  color: var(--warn);
+  font-size: 0.78rem;
+}
+.form-actions {
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+  margin-top: 0.5rem;
+}
+.btn {
+  display: inline-block;
+  padding: 0.5rem 1rem;
+  border-radius: 7px;
+  font: inherit;
+  font-size: 0.88rem;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  text-decoration: none;
+}
+.btn:hover { text-decoration: none; background: var(--code-bg); }
+.btn-primary {
+  background: var(--accent);
+  color: white;
+  border-color: var(--accent);
+}
+.btn-primary:hover { background: color-mix(in oklch, var(--accent) 85%, black); }

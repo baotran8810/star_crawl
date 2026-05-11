@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+{% block title %}Add source · star_crawl{% endblock %}
+{% block body %}
+
+<header class="page-head">
+  <p class="crumb"><a href="/sources">Sources</a> /</p>
+  <h1>Add a new source</h1>
+  <p class="muted">Writes <code>configs/sources/&lt;name&gt;.yaml</code> + adds a row in the database. The first crawl is triggered from the Sources page after this is saved.</p>
+</header>
+
+{% if general_error %}
+<div class="callout warn"><strong>Validation error:</strong> <code>{{ general_error }}</code></div>
+{% endif %}
+
+<form method="post" action="/sources" class="form-card">
+  <div class="form-row">
+    <label>
+      <span>Name <small class="muted">(lowercase, used as filename)</small></span>
+      <input name="name" required pattern="^[a-z][a-z0-9_]+$"
+             placeholder="my_blog_engineering" value="{{ form.name or '' }}">
+      {% if errors.name %}<p class="field-error">{{ errors.name }}</p>{% endif %}
+    </label>
+    <label>
+      <span>Display name</span>
+      <input name="display_name" required placeholder="My Blog Engineering"
+             value="{{ form.display_name or '' }}">
+      {% if errors.display_name %}<p class="field-error">{{ errors.display_name }}</p>{% endif %}
+    </label>
+  </div>
+
+  <label>
+    <span>Base URL</span>
+    <input type="url" name="base_url" required placeholder="https://example.com/blog"
+           value="{{ form.base_url or '' }}">
+    {% if errors.base_url %}<p class="field-error">{{ errors.base_url }}</p>{% endif %}
+  </label>
+
+  <div class="form-row">
+    <label>
+      <span>Fetcher</span>
+      <select name="fetcher">
+        <option value="http" {% if form.fetcher != 'browser' %}selected{% endif %}>http (default, fast)</option>
+        <option value="browser" {% if form.fetcher == 'browser' %}selected{% endif %}>browser (Playwright, slow but bypasses bot defense)</option>
+      </select>
+    </label>
+    <label>
+      <span>Seed strategy</span>
+      <select name="seed_strategy" id="strat-select" onchange="onStrategyChange()">
+        <option value="rss" {% if not form.seed_strategy or form.seed_strategy == 'rss' %}selected{% endif %}>rss (easiest)</option>
+        <option value="pagination" {% if form.seed_strategy == 'pagination' %}selected{% endif %}>pagination (/page/N/)</option>
+        <option value="sitemap" {% if form.seed_strategy == 'sitemap' %}selected{% endif %}>sitemap</option>
+      </select>
+      {% if errors.seed_strategy %}<p class="field-error">{{ errors.seed_strategy }}</p>{% endif %}
+    </label>
+  </div>
+
+  {# RSS / sitemap input #}
+  <label class="strat-rss strat-sitemap">
+    <span>Feed / sitemap URL</span>
+    <input type="url" name="seed_url" placeholder="https://example.com/feed.xml"
+           value="{{ form.seed_url or '' }}">
+    {% if errors.seed_url %}<p class="field-error">{{ errors.seed_url }}</p>{% endif %}
+  </label>
+
+  {# Pagination inputs #}
+  <label class="strat-pagination">
+    <span>Pagination template <small class="muted">(must contain <code>{n}</code>)</small></span>
+    <input name="seed_template" placeholder="https://example.com/blog/page/{n}/"
+           value="{{ form.seed_template or '' }}">
+    {% if errors.seed_template %}<p class="field-error">{{ errors.seed_template }}</p>{% endif %}
+  </label>
+  <div class="form-row strat-pagination">
+    <label>
+      <span>Range start</span>
+      <input type="number" name="seed_range_start" min="1"
+             value="{{ form.seed_range_start or 1 }}">
+    </label>
+    <label>
+      <span>Range end (inclusive)</span>
+      <input type="number" name="seed_range_end" min="1"
+             value="{{ form.seed_range_end or 10 }}">
+      {% if errors.seed_range_end %}<p class="field-error">{{ errors.seed_range_end }}</p>{% endif %}
+    </label>
+  </div>
+
+  <label>
+    <span>URL filter regex <small class="muted">(restricts which discovered URLs become articles)</small></span>
+    <input name="url_filter" required
+           placeholder="^https://example\.com/blog/[^/]+/?$"
+           value="{{ form.url_filter or '' }}">
+    {% if errors.url_filter %}<p class="field-error">{{ errors.url_filter }}</p>{% endif %}
+  </label>
+
+  <div class="form-actions">
+    <button type="submit" class="btn btn-primary">Save source</button>
+    <a href="/sources" class="btn">Cancel</a>
+  </div>
+</form>
+
+<script>
+  function onStrategyChange() {
+    const v = document.getElementById('strat-select').value;
+    document.querySelectorAll('.strat-rss').forEach(el => el.style.display = v === 'rss' ? '' : 'none');
+    document.querySelectorAll('.strat-sitemap').forEach(el => el.style.display = v === 'sitemap' ? '' : 'none');
+    document.querySelectorAll('.strat-pagination').forEach(el => el.style.display = v === 'pagination' ? '' : 'none');
+  }
+  onStrategyChange();
+</script>
+
+{% endblock %}

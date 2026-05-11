@@ -1,7 +1,7 @@
 # star_crawl Constitution
 
-**Version**: 0.1.0
-**Ratified**: 2026-05-10
+**Version**: 0.2.0
+**Ratified**: 2026-05-10 · **Amended**: 2026-05-11
 **Scope**: Personal corpus tooling — crawl, store, browse, analyze tech-blog content.
 
 ## Core Principles
@@ -36,11 +36,25 @@ The article store is the canonical state. JSONL, parquet, and any future export 
 
 *Rationale*: Avoids the "what's the truth — the JSONL or the database?" question that makes export-first pipelines brittle.
 
-### VI. Read-Only Web UI
+### VI. UI Writes Are Explicit and User-Triggered (revised v0.2.0)
 
-The web interface MUST be read-only. Crawl runs are triggered exclusively via the CLI. The UI never writes corpus state.
+The web interface MAY write corpus state, but ONLY in direct response to an
+explicit user action (form submit, button click). The UI MUST NOT:
 
-*Rationale*: Crawls are long-running, fault-prone operations. A button in a browser is the wrong place for them.
+- Mutate state on a `GET` request,
+- Run a crawl on schedule, cron, or page load,
+- Persist any change without the user actively confirming.
+
+Long-running operations (e.g., crawls) MUST run **out-of-process** (subprocess
+or worker) so the web request thread is never blocked, and progress MUST be
+observable on the existing `/runs` page.
+
+*Rationale (revised)*: The original read-only rule was a safety policy, not a
+goal in itself. The real safety property is "no surprise writes." A button the
+user clicks on a button labelled `Run` is not a surprise — and forcing CLI-only
+for routine operations creates friction without protecting anything.
+
+*What stays banned*: implicit writes, auto-crawls on page load, write-on-GET.
 
 ### VII. Failure Visibility
 

@@ -9,10 +9,13 @@
 <div class="finder finder-wide">
   {# Column 1 — sources #}
   <aside class="finder-col col-sources">
-    <h4>Sources</h4>
+    <div class="col-head">
+      <h4>Sources</h4>
+      <a href="/sources/new" class="btn-tiny" title="Add a new source">+ Add</a>
+    </div>
     <ul class="finder-list">
       {% for s in sources %}
-      <li>
+      <li class="source-row">
         <a href="#" data-finder-row="source"
            hx-get="/sources/{{ s.name }}/articles"
            hx-target="#finder-col-articles"
@@ -24,6 +27,10 @@
           </span>
           <span class="row-chev">›</span>
         </a>
+        <form method="post" action="/sources/{{ s.name }}/run" class="row-action"
+              onsubmit="this.querySelector('button').disabled=true;this.querySelector('button').textContent='…';">
+          <button type="submit" title="Run crawl now (skips already-fetched articles)">▶</button>
+        </form>
       </li>
       {% endfor %}
     </ul>
