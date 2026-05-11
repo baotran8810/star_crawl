@@ -9,20 +9,22 @@ import networkx as nx
 
 logger = logging.getLogger(__name__)
 
-# Distinct OKLCH hues for clusters (will be cycled if more clusters than colors)
+# Distinct, vivid OKLCH palette. Higher chroma + irregular hue spacing
+# maximises perceived separation between adjacent clusters (vs naive 30°
+# steps that all collapse into "pastel blues" perceptually).
 PALETTE = [
-    "oklch(72% 0.16 250)",  # blue
-    "oklch(75% 0.14 150)",  # green
-    "oklch(75% 0.16 320)",  # purple
-    "oklch(78% 0.14 60)",   # warm
-    "oklch(70% 0.18 30)",   # red
-    "oklch(78% 0.13 100)",  # yellow-green
-    "oklch(72% 0.16 200)",  # teal
-    "oklch(70% 0.16 290)",  # violet
-    "oklch(75% 0.14 350)",  # pink
-    "oklch(72% 0.13 120)",  # mint
-    "oklch(70% 0.15 350)",  # rose
-    "oklch(72% 0.13 220)",  # azure
+    "oklch(60% 0.22 250)",  # cobalt blue
+    "oklch(64% 0.19 150)",  # leaf green
+    "oklch(60% 0.24 320)",  # magenta-purple
+    "oklch(70% 0.19 55)",   # amber
+    "oklch(58% 0.22 25)",   # crimson
+    "oklch(72% 0.17 195)",  # teal
+    "oklch(66% 0.18 105)",  # olive
+    "oklch(62% 0.20 285)",  # violet
+    "oklch(68% 0.18 355)",  # coral
+    "oklch(65% 0.17 175)",  # jade
+    "oklch(62% 0.22 335)",  # fuchsia
+    "oklch(70% 0.17 225)",  # azure
 ]
 
 

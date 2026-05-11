@@ -4,6 +4,7 @@
   const dataNode = document.getElementById('cy-data');
   if (!dataNode) return;
 
+  // ─────────── palette & helpers ───────────
   function readPayload() {
     try {
       return JSON.parse(dataNode.textContent || '{}');
@@ -13,56 +14,164 @@
     }
   }
 
+  // Smaller label-threshold for cleanliness; big nodes get labels, small
+  // nodes only on hover.
+  const LABEL_FREQ_THRESHOLD = 5;
+
   let payload = readPayload();
+
+  // ─────────── cytoscape instance ───────────
   const cy = cytoscape({
     container: document.getElementById('cy'),
     elements: { nodes: payload.nodes || [], edges: payload.edges || [] },
-    layout: { name: 'fcose', animate: false, randomize: true },
+    minZoom: 0.25,
+    maxZoom: 3.0,
+    wheelSensitivity: 0.25,
+    layout: layoutOpts(),
     style: [
+      // Base node — pill shape with cluster fill + soft border for separation
       {
         selector: 'node',
         style: {
           'background-color': 'data(color)',
-          'label': 'data(display)',
-          'color': 'oklch(20% 0.01 80)',
-          'font-size': 10,
+          'background-opacity': 0.95,
+          'border-width': 2,
+          'border-color': 'data(color)',
+          'border-opacity': 1,
+          'color': '#fff',
+          'font-size': 12,
+          'font-weight': 600,
           'text-valign': 'center',
           'text-halign': 'center',
-          'text-outline-width': 2,
+          'text-outline-width': 2.5,
           'text-outline-color': 'data(color)',
-          'width': 'mapData(doc_freq, 1, 100, 14, 60)',
-          'height': 'mapData(doc_freq, 1, 100, 14, 60)',
-          'border-width': 0,
-          'transition-property': 'opacity, border-width',
-          'transition-duration': '150ms',
+          'text-outline-opacity': 1,
+          'width':  'mapData(doc_freq, 1, 60, 22, 78)',
+          'height': 'mapData(doc_freq, 1, 60, 22, 78)',
+          'overlay-opacity': 0,
+          'transition-property': 'background-color, border-color, border-width, opacity',
+          'transition-duration': '180ms',
         },
       },
+      // Only show labels for nodes meeting the threshold, by default
+      {
+        selector: 'node',
+        style: { 'label': '' },
+      },
+      {
+        selector: `node[doc_freq >= ${LABEL_FREQ_THRESHOLD}]`,
+        style: { 'label': 'data(display)' },
+      },
+
+      // Edges — colored from the source node, opacity ∝ NPMI for visual depth
       {
         selector: 'edge',
         style: {
-          'width': 'mapData(npmi, 0.15, 1.0, 0.5, 4)',
-          'line-color': 'oklch(82% 0.008 80)',
-          'opacity': 0.5,
-          'curve-style': 'haystack',
-          'transition-property': 'opacity',
-          'transition-duration': '150ms',
+          'width': 'mapData(npmi, 0.10, 1.0, 1, 6)',
+          'line-color': 'data(color)',
+          'line-opacity': 'mapData(npmi, 0.10, 1.0, 0.18, 0.55)',
+          'curve-style': 'straight',
+          'transition-property': 'line-opacity, width, line-color',
+          'transition-duration': '180ms',
+        },
+      },
+
+      // Hover state — node grows a tiny border halo + label appears
+      {
+        selector: 'node.hovered',
+        style: {
+          'border-width': 5,
+          'border-opacity': 0.55,
+          'label': 'data(display)',
+          'z-index': 99,
         },
       },
       {
-        selector: 'node:selected',
-        style: { 'border-width': 3, 'border-color': 'oklch(52% 0.18 30)' },
+        selector: 'edge.hovered',
+        style: {
+          'line-opacity': 0.9,
+          'width': 'mapData(npmi, 0.10, 1.0, 2, 8)',
+        },
       },
-      { selector: '.faded', style: { opacity: 0.1 } },
+      {
+        selector: 'node.neighbor-of-hovered',
+        style: {
+          'label': 'data(display)',
+          'border-width': 3,
+          'z-index': 50,
+        },
+      },
+
+      // Selected (click-locked focus) state
+      {
+        selector: 'node.selected',
+        style: {
+          'border-width': 6,
+          'border-color': 'oklch(60% 0.20 30)',
+          'border-opacity': 0.9,
+          'label': 'data(display)',
+          'z-index': 100,
+        },
+      },
+
+      // Faded — used while focus-mode is active to demote non-neighbors
+      { selector: '.faded', style: { opacity: 0.08 } },
     ],
   });
 
+  function layoutOpts() {
+    return {
+      name: 'fcose',
+      animate: false,
+      randomize: true,
+      quality: 'default',
+      nodeRepulsion: 9000,
+      idealEdgeLength: 70,
+      edgeElasticity: 0.45,
+      gravity: 0.35,
+      gravityRangeCompound: 1.0,
+      numIter: 3000,
+      tile: true,
+      tilingPaddingHorizontal: 12,
+      tilingPaddingVertical: 12,
+      nodeSeparation: 80,
+    };
+  }
+
+  // ─────────── edge tinting from source cluster ───────────
+  function tintEdgesFromSource() {
+    cy.edges().forEach(function (e) {
+      const src = e.source();
+      const color = src.data('color');
+      e.data('color', color);
+    });
+  }
+  tintEdgesFromSource();
+
+  // ─────────── hover interaction ───────────
+  cy.on('mouseover', 'node', function (evt) {
+    const node = evt.target;
+    node.addClass('hovered');
+    node.connectedEdges().addClass('hovered');
+    node.neighborhood('node').addClass('neighbor-of-hovered');
+  });
+  cy.on('mouseout', 'node', function (evt) {
+    const node = evt.target;
+    node.removeClass('hovered');
+    node.connectedEdges().removeClass('hovered');
+    cy.nodes('.neighbor-of-hovered').removeClass('neighbor-of-hovered');
+  });
+
+  // ─────────── click-to-focus ───────────
   function focusNode(node) {
     cy.elements().removeClass('faded');
+    cy.nodes('.selected').removeClass('selected');
     const visible = node.closedNeighborhood();
     cy.elements().difference(visible).addClass('faded');
+    node.addClass('selected');
     cy.animate(
-      { fit: { eles: visible, padding: 60 } },
-      { duration: 300 }
+      { fit: { eles: visible, padding: 80 } },
+      { duration: 300, easing: 'ease-out-quad' }
     );
   }
 
@@ -74,11 +183,13 @@
     htmx.ajax('GET', '/keywords/' + kwId, { target: '#keyword-panel', swap: 'innerHTML' });
   });
   cy.on('tap', function (evt) {
-    if (evt.target === cy) cy.elements().removeClass('faded');
+    if (evt.target === cy) {
+      cy.elements().removeClass('faded');
+      cy.nodes('.selected').removeClass('selected');
+    }
   });
 
-  // Focus a node when the user picks one from the type-ahead search results
-  // or a neighbor in the side panel (both render <a data-kw-id="...">).
+  // Type-ahead suggestion / side-panel neighbor click → focus the matching node
   document.body.addEventListener('click', function (e) {
     const link = e.target.closest('a[data-kw-id]');
     if (!link) return;
@@ -87,18 +198,76 @@
     if (node && node.nonempty()) {
       focusNode(node);
     }
-    // HTMX continues to load the side-panel via the element's hx-get.
   });
 
-  // Refresh elements when filter HTMX swaps the data div
+  // ─────────── refresh on HTMX data swap ───────────
   document.body.addEventListener('htmx:afterSwap', function (e) {
     if (e.detail.target.id !== 'cy-data') return;
     payload = readPayload();
     cy.json({ elements: { nodes: payload.nodes || [], edges: payload.edges || [] } });
-    cy.layout({ name: 'fcose', animate: false, randomize: false }).run();
+    tintEdgesFromSource();
+    cy.layout(layoutOpts()).run();
+    renderLegend();
   });
 
-  // Reset filter form helper — wired from the template's Reset button
+  // ─────────── cluster legend ───────────
+  function renderLegend() {
+    const target = document.getElementById('graph-legend');
+    if (!target) return;
+    const byCluster = new Map();
+    cy.nodes().forEach(function (n) {
+      const cid = n.data('cluster_id');
+      if (!cid || cid === 0) return;
+      const entry = byCluster.get(cid) || {
+        id: cid,
+        label: n.data('cluster_label') || `cluster ${cid}`,
+        color: n.data('color'),
+        count: 0,
+      };
+      entry.count += 1;
+      byCluster.set(cid, entry);
+    });
+    const items = Array.from(byCluster.values()).sort((a, b) => b.count - a.count);
+    target.innerHTML = items.map(function (c) {
+      return (
+        '<button type="button" class="legend-row" data-cluster-id="' + c.id + '">' +
+        '<span class="legend-swatch" style="background:' + c.color + '"></span>' +
+        '<span class="legend-label">' + escapeHtml(c.label) + '</span>' +
+        '<span class="legend-count">' + c.count + '</span>' +
+        '</button>'
+      );
+    }).join('');
+  }
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, function (m) {
+      return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[m];
+    });
+  }
+
+  // Click a legend row → focus that cluster: hide everything else, fit to cluster
+  document.body.addEventListener('click', function (e) {
+    const row = e.target.closest('.legend-row');
+    if (!row) return;
+    const cid = Number(row.dataset.clusterId);
+    cy.elements().removeClass('faded');
+    cy.nodes('.selected').removeClass('selected');
+    const inCluster = cy.nodes().filter(function (n) {
+      return n.data('cluster_id') === cid;
+    });
+    const visible = inCluster.union(inCluster.connectedEdges());
+    cy.elements().difference(visible).addClass('faded');
+    cy.animate(
+      { fit: { eles: inCluster, padding: 80 } },
+      { duration: 350, easing: 'ease-out-quad' }
+    );
+    document.querySelectorAll('.legend-row.active').forEach(el => el.classList.remove('active'));
+    row.classList.add('active');
+  });
+
+  renderLegend();
+
+  // ─────────── reset filter form helper ───────────
   window.resetGraphFilters = function () {
     const form = document.getElementById('filter-form');
     if (!form) return;
@@ -109,4 +278,13 @@
     });
     htmx.trigger(form, 'change');
   };
+
+  // Convenience: "fit graph" + "clear focus" double-click on empty canvas
+  cy.on('dblclick', function (evt) {
+    if (evt.target === cy) {
+      cy.elements().removeClass('faded');
+      cy.nodes('.selected').removeClass('selected');
+      cy.animate({ fit: { eles: cy.elements(), padding: 40 } }, { duration: 300 });
+    }
+  });
 })();
