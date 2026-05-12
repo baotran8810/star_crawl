@@ -1207,3 +1207,34 @@ body.finder-fullscreen [data-action="toggle-fullscreen"]::after {
   border-radius: 8px;
   font-size: 0.85rem;
 }
+
+/* Chip strip placed near the top of the article (above the body) */
+.ak-strip {
+  margin: 1rem 0 1.25rem;
+  padding: 0.75rem 0.9rem;
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+.ak-strip-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+.ak-strip-label {
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-weight: 500;
+}
+.ak-strip-label small { font-weight: 400; }
+.ak-jump {
+  font-size: 0.78rem;
+  font-weight: 500;
+  text-decoration: none;
+  color: var(--accent);
+  cursor: pointer;
+}
+.ak-jump:hover { text-decoration: none; opacity: 0.85; }

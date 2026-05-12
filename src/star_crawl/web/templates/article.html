@@ -12,14 +12,14 @@
   <h1>{{ article.title }}</h1>
   {% if article.author %}<p class="byline">By <strong>{{ article.author }}</strong></p>{% endif %}
 
+  {% set needs_extract = (not keywords) %}
+  {% include "partials/article_chips.html" %}
+
   <div class="prose">
     {{ article.content_md | md | safe }}
   </div>
 
-  {% set needs_extract = (not keywords) %}
-  <div id="article-keywords-{{ article.id }}" class="article-keywords">
-    {% include "partials/article_keywords.html" %}
-  </div>
+  {% include "partials/article_related.html" %}
 </div>
 
 <aside class="meta-panel">

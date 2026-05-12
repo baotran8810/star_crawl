@@ -28,15 +28,18 @@
     {% if article.author %}<p class="byline">By <strong>{{ article.author }}</strong></p>{% endif %}
   </header>
 
+  {# Keyword chip strip — visible without scrolling. Click a chip to
+     jump into the graph focused on that keyword. #}
+  {% include "partials/article_chips.html" %}
+
   <div class="preview-snippet prose">
     {{ article.content_md | md | safe }}
   </div>
 
   <hr>
 
-  <div id="article-keywords-{{ article.id }}">
-    {% include "partials/article_keywords.html" %}
-  </div>
+  {# Related articles at the bottom — natural next-step after reading. #}
+  {% include "partials/article_related.html" %}
 
   <hr>
   <dl class="preview-meta">

@@ -1,0 +1,31 @@
+{# Compact keyword chip strip — placed near the top of an article so it's
+   visible without scrolling. Clicking a chip jumps into the graph. #}
+{% if needs_extract %}
+<div class="ak-empty muted">
+  No keywords extracted yet. Click <strong>⟳ Rebuild graph</strong> on the Graph page.
+</div>
+{% elif keywords %}
+<div class="ak-strip">
+  <div class="ak-strip-head">
+    <span class="ak-strip-label">Keywords <small>·</small> {{ keywords|length }}</span>
+    {% if related %}
+    <a href="#related-{{ article_id or article.id }}" class="ak-jump muted"
+       onclick="document.getElementById('related-{{ article_id or article.id }}').scrollIntoView({behavior:'smooth',block:'start'});return false;">
+      Related ({{ related|length }}) ↓
+    </a>
+    {% endif %}
+  </div>
+  <div class="kw-chips">
+    {% for k in keywords %}
+    <a class="kw-chip"
+       href="/graph?focus={{ k.id }}&min_freq=1&min_npmi=0.0"
+       style="--chip-color: {{ k.cluster_color or 'var(--accent)' }}"
+       title="{{ k.display }} — {{ k.doc_freq }} article{{ 's' if k.doc_freq != 1 else '' }}{% if k.is_glossary %} · glossary match{% endif %}">
+      <span class="chip-dot"></span>
+      <span class="chip-label">{{ k.display }}</span>
+      <span class="chip-count">{{ k.doc_freq }}</span>
+    </a>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}

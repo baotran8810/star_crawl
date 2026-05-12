@@ -1,0 +1,28 @@
+{# Related-articles block — placed at the bottom of an article. #}
+{% if needs_extract %}
+{# Suppress when there's nothing extracted yet; the top chip strip already
+   surfaces this state to the user. #}
+{% elif related %}
+<section class="ak-block" id="related-{{ article_id or article.id }}">
+  <h4>Related articles <small class="muted">by shared keywords</small></h4>
+  <ul class="related-list">
+    {% for r in related %}
+    <li>
+      <a href="/articles/{{ r.id }}" class="related-link">
+        <div class="rel-main">{{ r.title }}</div>
+        <div class="rel-meta">
+          <span class="mono">{{ r.source_name }}</span>
+          {% if r.published_at %}· <span class="mono">{{ r.published_at[:10] }}</span>{% endif %}
+          · <strong>{{ r.overlap }}</strong> shared keyword{{ 's' if r.overlap != 1 else '' }}
+        </div>
+      </a>
+    </li>
+    {% endfor %}
+  </ul>
+</section>
+{% elif keywords %}
+<section class="ak-block" id="related-{{ article_id or article.id }}">
+  <h4>Related articles</h4>
+  <p class="muted">No other articles share keywords with this one yet.</p>
+</section>
+{% endif %}
