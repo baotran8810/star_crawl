@@ -219,3 +219,56 @@ def search_keywords(conn: sqlite3.Connection, q: str, limit: int = 10) -> list:
         (f"%{q.lower()}%", f"%{q}%", limit),
     ).fetchall()
     return rows
+
+
+def read_article_keywords(conn: sqlite3.Connection, article_id: int) -> list:
+    """Keywords linked to one article, ordered by score then doc_freq."""
+    return conn.execute(
+        """SELECT k.id, k.term, k.display, k.doc_freq, k.cluster_id,
+                  ak.score, ak.is_glossary,
+                  c.label AS cluster_label,
+                  c.color AS cluster_color
+             FROM article_keywords ak
+             JOIN keywords k ON k.id = ak.keyword_id
+        LEFT JOIN clusters c ON c.id = k.cluster_id
+            WHERE ak.article_id = ?
+            ORDER BY ak.score DESC, k.doc_freq DESC""",
+        (article_id,),
+    ).fetchall()
+
+
+def read_related_articles(
+    conn: sqlite3.Connection, article_id: int, *, limit: int = 8
+) -> list:
+    """Other articles ranked by overlap of keywords with this one.
+
+    Returns rows with id, title, source_name, source_display, published_at,
+    overlap (# shared keywords), word_count. 0 results when this article
+    has no keyword links yet or no other article shares any keyword.
+    """
+    return conn.execute(
+        """WITH this_kw AS (
+              SELECT keyword_id FROM article_keywords WHERE article_id = ?
+           )
+           SELECT a.id, a.title, a.source_name, a.published_at, a.word_count,
+                  s.display_name AS source_display,
+                  COUNT(*) AS overlap
+             FROM article_keywords ak
+             JOIN this_kw t ON t.keyword_id = ak.keyword_id
+             JOIN articles a ON a.id = ak.article_id
+             JOIN sources s ON s.name = a.source_name
+            WHERE ak.article_id != ?
+            GROUP BY ak.article_id
+            HAVING overlap > 0
+            ORDER BY overlap DESC, a.published_at DESC
+            LIMIT ?""",
+        (article_id, article_id, limit),
+    ).fetchall()
+
+
+def has_extracted_keywords(conn: sqlite3.Connection, article_id: int) -> bool:
+    row = conn.execute(
+        "SELECT 1 FROM article_keywords WHERE article_id = ? LIMIT 1",
+        (article_id,),
+    ).fetchone()
+    return row is not None

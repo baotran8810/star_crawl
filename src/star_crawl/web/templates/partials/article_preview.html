@@ -33,6 +33,12 @@
   </div>
 
   <hr>
+
+  <div id="article-keywords-{{ article.id }}">
+    {% include "partials/article_keywords.html" %}
+  </div>
+
+  <hr>
   <dl class="preview-meta">
     <dt>URL</dt><dd class="mono"><a href="{{ article.url }}" target="_blank" rel="noopener noreferrer">{{ article.url }}</a></dd>
     {% if article.lang %}<dt>Lang</dt><dd>{{ article.lang }}</dd>{% endif %}

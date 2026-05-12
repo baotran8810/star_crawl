@@ -1116,3 +1116,94 @@ body.finder-fullscreen [data-action="toggle-fullscreen"]::after {
 }
 .graph-page-head .head-left { flex: 1 1 auto; min-width: 0; }
 .graph-page-head .head-actions { flex: 0 0 auto; }
+
+/* ============ Article keywords + related ============ */
+.ak-block { margin: 1.25rem 0; }
+.ak-block h4 {
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-weight: 500;
+  margin: 0 0 0.6rem;
+}
+.ak-block h4 small { font-weight: 400; }
+
+.kw-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.4rem;
+}
+.kw-chip {
+  --chip-color: var(--accent);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.55rem 0.25rem 0.45rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--text);
+  text-decoration: none;
+  background: color-mix(in oklch, var(--chip-color) 18%, var(--surface));
+  border: 1px solid color-mix(in oklch, var(--chip-color) 35%, var(--border));
+  transition: background 120ms, transform 120ms, border-color 120ms;
+}
+.kw-chip:hover {
+  text-decoration: none;
+  transform: translateY(-1px);
+  background: color-mix(in oklch, var(--chip-color) 30%, var(--surface));
+  border-color: var(--chip-color);
+}
+.kw-chip .chip-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--chip-color);
+  flex: 0 0 auto;
+}
+.kw-chip .chip-count {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.related-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.related-list li { margin: 0; }
+.related-list .related-link {
+  display: block;
+  padding: 0.55rem 0.7rem;
+  border-radius: 8px;
+  color: var(--text);
+  text-decoration: none;
+  border: 1px solid transparent;
+  transition: background 120ms, border-color 120ms;
+}
+.related-list .related-link:hover {
+  background: var(--code-bg);
+  border-color: var(--border);
+  text-decoration: none;
+}
+.related-list .rel-main {
+  font-weight: 500;
+  font-size: 0.9rem;
+  margin-bottom: 0.15rem;
+}
+.related-list .rel-meta {
+  font-size: 0.74rem;
+  color: var(--muted);
+}
+.related-list .rel-meta strong { color: var(--accent); }
+
+.ak-empty {
+  padding: 0.85rem 1rem;
+  background: var(--code-bg);
+  border: 1px dashed var(--border);
+  border-radius: 8px;
+  font-size: 0.85rem;
+}
