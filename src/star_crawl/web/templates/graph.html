@@ -2,20 +2,35 @@
 {% block title %}Graph · star_crawl{% endblock %}
 {% block body %}
 
-<header class="page-head">
-  <h1>Topic graph</h1>
-  <p class="muted">
-    Built {{ meta.built_at[:16] if meta.built_at else 'never' }} ·
-    {{ meta.last_build_articles }} articles at build time ·
-    {{ meta.current_articles }} now
-  </p>
-  {% if meta.is_stale %}
-  <div class="callout warn">
-    <strong>Graph is stale</strong> — corpus has grown by more than 5% since the
-    last build. Run <code>star-crawl build-graph</code> to refresh.
+<header class="page-head graph-page-head">
+  <div class="head-left">
+    <h1>Topic graph</h1>
+    <p class="muted">
+      Built {{ meta.built_at[:16] if meta.built_at else 'never' }} ·
+      {{ meta.last_build_articles }} articles at build time ·
+      {{ meta.current_articles }} now
+    </p>
   </div>
-  {% endif %}
+  <form method="post" action="/graph/rebuild" class="head-actions"
+        onsubmit="this.querySelector('button').disabled=true;this.querySelector('button').textContent='Rebuilding…';">
+    <button type="submit" class="btn btn-primary"
+            title="Run extract-keywords + build-graph against the current corpus">
+      ⟳ Rebuild graph
+    </button>
+  </form>
 </header>
+
+{% if request.query_params.get('rebuilding') %}
+<div class="callout">
+  <strong>Rebuild started.</strong> Extracting keywords from new articles + recomputing the graph in the background.
+  Refresh this page in ~10–30 seconds. Logs at <code>data/logs/graph_rebuild_*.log</code>.
+</div>
+{% elif meta.is_stale %}
+<div class="callout warn">
+  <strong>Graph is stale</strong> — corpus has grown by more than 5% since the
+  last build. Click <strong>⟳ Rebuild graph</strong> above to refresh.
+</div>
+{% endif %}
 
 <div class="graph-shell">
   <aside class="graph-sidebar">

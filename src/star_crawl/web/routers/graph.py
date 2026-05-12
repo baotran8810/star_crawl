@@ -3,10 +3,16 @@
 from __future__ import annotations
 
 import json
+import os
+import shutil
 import sqlite3
+import subprocess
+import sys
+import time
+from pathlib import Path
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, RedirectResponse
 
 from star_crawl.graph.repository import (
     GraphFilters,
@@ -16,10 +22,59 @@ from star_crawl.graph.repository import (
     search_keywords,
     stale_status,
 )
-from star_crawl.web.deps import get_conn
+from star_crawl.web.deps import data_dir, get_conn
 
 router = APIRouter()
 EMPTY_THRESHOLD = 20
+
+# Rebuild defaults — matches the latest CLI tuning so the UI button gives
+# the same shape as `star-crawl extract-keywords && star-crawl build-graph`
+REBUILD_BUILD_FLAGS = [
+    "--min-doc-freq", "2",
+    "--min-co-count", "1",
+    "--min-npmi", "0.15",
+    "--max-edges-per-node", "12",
+]
+
+
+def _star_crawl_cmd() -> list[str]:
+    """Path to the star-crawl entry point in the current environment."""
+    binary = shutil.which("star-crawl")
+    if binary:
+        return [binary]
+    return [sys.executable, "-m", "star_crawl.cli"]
+
+
+def _spawn_rebuild(env: dict) -> Path:
+    """Spawn extract-keywords && build-graph in a single shell pipeline.
+
+    Returns the log path so the UI can link to it. Detached, non-blocking.
+    """
+    log_path = Path(data_dir()) / "logs" / f"graph_rebuild_{int(time.time())}.log"
+    log_path.parent.mkdir(parents=True, exist_ok=True)
+    log_fp = open(log_path, "wb")  # noqa: SIM115 — owned by subprocess
+
+    base = _star_crawl_cmd()
+    extract_cmd = base + ["extract-keywords"]
+    build_cmd = base + ["build-graph", *REBUILD_BUILD_FLAGS]
+
+    # Run as a small shell script so both phases execute in order.
+    script = (
+        f"set -e\n"
+        f"echo '[rebuild] extract-keywords'\n"
+        f"{' '.join(extract_cmd)}\n"
+        f"echo '[rebuild] build-graph'\n"
+        f"{' '.join(build_cmd)}\n"
+        f"echo '[rebuild] done'\n"
+    )
+    subprocess.Popen(
+        ["bash", "-c", script],
+        env=env,
+        stdout=log_fp,
+        stderr=subprocess.STDOUT,
+        start_new_session=True,
+    )
+    return log_path
 
 
 def _filters(
@@ -121,3 +176,18 @@ async def keyword_panel(
         name="partials/keyword_panel.html",
         context=panel,
     )
+
+
+@router.post("/graph/rebuild")
+async def rebuild_graph_now():
+    """Trigger extract-keywords + build-graph as a detached subprocess.
+
+    Constitution VI v0.2.0: explicit user-click, runs out-of-process so the
+    request thread is never blocked. extract-keywords is idempotent — it
+    skips articles that already have keyword links — so re-clicking after a
+    minor crawl is safe and cheap.
+    """
+    env = dict(os.environ)
+    env.setdefault("STAR_CRAWL_DATA_DIR", str(data_dir()))
+    _spawn_rebuild(env)
+    return RedirectResponse(url="/graph?rebuilding=1", status_code=303)

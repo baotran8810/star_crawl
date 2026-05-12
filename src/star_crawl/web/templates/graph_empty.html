@@ -10,7 +10,14 @@
     need at least {{ min_keywords }} keywords across ~100+ articles before the graph is
     informative.
   </p>
-  <p>Run:</p>
+
+  <p>Crawl more articles first (Sources tab), then build the graph:</p>
+  <form method="post" action="/graph/rebuild" style="margin-top: 1rem;"
+        onsubmit="this.querySelector('button').disabled=true;this.querySelector('button').textContent='Rebuilding…';">
+    <button type="submit" class="btn btn-primary">⟳ Rebuild graph now</button>
+  </form>
+
+  <p style="margin-top:1.5rem;" class="muted">Or from the CLI:</p>
   <pre><code>star-crawl run --all
 star-crawl extract-keywords --all
 star-crawl build-graph</code></pre>
