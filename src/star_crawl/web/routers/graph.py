@@ -26,8 +26,8 @@ def _filters(
     source: list[str] | None = Query(default=None),
     since: str | None = None,
     until: str | None = None,
-    min_freq: int = 3,
-    min_npmi: float = 0.15,
+    min_freq: int = 2,
+    min_npmi: float = 0.10,
     cluster: int | None = None,
     focus: int | None = None,
 ) -> GraphFilters:

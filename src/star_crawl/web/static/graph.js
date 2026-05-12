@@ -156,10 +156,11 @@
   // so detail is visible at every scale. Hover/select still force a label
   // via their own selectors regardless of zoom.
   function labelThresholdFor(zoom) {
-    if (zoom >= 2.0) return 1;   // very zoomed-in: everything
-    if (zoom >= 1.4) return 3;
-    if (zoom >= 0.9) return 5;
-    return 8;                     // zoomed-out: only the biggest
+    // More aggressive: small zoom-ins reveal many more keywords.
+    if (zoom >= 1.3) return 1;   // ≥130%: every node (all keywords)
+    if (zoom >= 1.0) return 2;   // ≥100%: skip only the very rarest
+    if (zoom >= 0.75) return 4;
+    return 6;                     // zoomed-out: clean view
   }
 
   let labelThresholdCache = null;
