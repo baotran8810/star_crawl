@@ -75,6 +75,10 @@ def extract_corpus(
             if r["lang"] and r["lang"] != "en":
                 stats.articles_skipped += 1
                 continue
+            # The LLM extractor benefits from knowing the title separately
+            # so the prompt is anchored to "what is this article about".
+            if hasattr(extractor, "title"):
+                extractor.title = r["title"] or ""
             kb_pairs = extractor.extract(text)
             gl_pairs = extract.glossary_hits(text, glossary)
             merged = extract.merge_and_normalize(kb_pairs, gl_pairs, glossary)

@@ -175,26 +175,52 @@ def run(
 
 @app.command("extract-keywords")
 def extract_keywords_cmd(
+    method: str = typer.Option("keybert", "--method",
+                               help="keybert | llm (uses STAR_CRAWL_LLM_* env vars)"),
+    model: str | None = typer.Option(None, "--model",
+                                     help="(llm only) override the LLM router model slug"),
     source: str | None = typer.Option(None, "--source"),
     rebuild: bool = typer.Option(False, "--rebuild"),
-    top_n: int = typer.Option(15, "--top-n"),
-    min_score: float = typer.Option(0.35, "--min-score"),
+    top_n: int = typer.Option(15, "--top-n", help="(keybert only)"),
+    min_score: float = typer.Option(0.35, "--min-score", help="(keybert only)"),
     no_glossary: bool = typer.Option(False, "--no-glossary"),
     config_dir: str = typer.Option("configs/graph", "--config-dir"),
     data_dir: str | None = typer.Option(None, "--data-dir"),
 ) -> None:
-    """Run keyword extraction over the corpus (KeyBERT + glossary boost)."""
-    from star_crawl.graph.extract import KeyBertExtractor
+    """Run keyword extraction over the corpus.
+
+    --method keybert   (default) local semantic extractor, free, ~50 articles/s
+    --method llm       OpenAI-compatible LLM via STAR_CRAWL_LLM_BASE_URL.
+                       Defaults to 9router at http://localhost:20128/v1 with
+                       model xiaomi/mimo-v2.5-pro. Results cached by
+                       content hash → re-runs cost zero.
+    """
     from star_crawl.graph.glossary import Glossary, load as load_glossary
     from star_crawl.graph.runner import extract_corpus
 
     path = _data_dir(data_dir)
     db_migrate.migrate(path)
-
     glossary = load_glossary(Path(config_dir)) if not no_glossary else Glossary()
-    extractor = KeyBertExtractor(top_n=top_n, min_score=min_score)
 
-    console.print("[dim]Loading model (first run downloads ~80MB)…[/dim]")
+    if method == "llm":
+        from star_crawl.graph.extract_llm import LLMConfig, LLMExtractor
+
+        cfg = LLMConfig.from_env(model=model)
+        extractor = LLMExtractor(cfg)
+        console.print(
+            f"[dim]LLM extractor: {cfg.model} via {cfg.base_url}"
+            + (f" · budget ${cfg.budget_usd:.2f}" if cfg.budget_usd else "")
+            + "[/dim]"
+        )
+    elif method == "keybert":
+        from star_crawl.graph.extract import KeyBertExtractor
+
+        extractor = KeyBertExtractor(top_n=top_n, min_score=min_score)
+        console.print("[dim]KeyBERT extractor (first run downloads ~80MB)…[/dim]")
+    else:
+        err_console.print(f"[red]error:[/red] --method must be 'keybert' or 'llm'")
+        raise typer.Exit(code=3)
+
     stats = extract_corpus(
         extractor=extractor,
         glossary=glossary,
@@ -206,9 +232,19 @@ def extract_keywords_cmd(
     console.print(
         f"extracted: [green]{stats.articles_processed}[/green] articles · "
         f"keywords [bold]{stats.keywords_total}[/bold] "
-        f"({stats.keywords_glossary} glossary, {stats.keywords_keybert} keybert) · "
+        f"({stats.keywords_glossary} glossary, {stats.keywords_keybert} keybert/llm) · "
         f"skipped {stats.articles_skipped} (lang filter)"
     )
+    if method == "llm":
+        # Show running spend so the user knows the cost.
+        from star_crawl.graph.extract_llm import SPEND_FILE
+        if SPEND_FILE.exists():
+            import json as _json
+            sp = _json.loads(SPEND_FILE.read_text())
+            console.print(
+                f"[dim]cumulative LLM spend: ${sp['total_usd']:.4f} "
+                f"({sp['calls']} calls · {sp['in_tokens']:,} in · {sp['out_tokens']:,} out)[/dim]"
+            )
 
 
 @app.command("build-graph")
