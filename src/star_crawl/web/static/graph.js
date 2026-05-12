@@ -53,13 +53,16 @@
           'transition-duration': '180ms',
         },
       },
-      // Only show labels for nodes meeting the threshold, by default
+      // Default: no label. A dynamic zoom handler (below) toggles per-node
+      // labels by adding/removing the .show-label class. This lets the
+      // graph progressively reveal smaller nodes as the user zooms in,
+      // instead of being stuck at a single static threshold.
       {
         selector: 'node',
         style: { 'label': '' },
       },
       {
-        selector: `node[doc_freq >= ${LABEL_FREQ_THRESHOLD}]`,
+        selector: 'node.show-label',
         style: { 'label': 'data(display)' },
       },
 
@@ -148,6 +151,51 @@
   }
   tintEdgesFromSource();
 
+  // ─────────── zoom-aware labels ───────────
+  // As the user zooms in we progressively reveal labels on smaller nodes
+  // so detail is visible at every scale. Hover/select still force a label
+  // via their own selectors regardless of zoom.
+  function labelThresholdFor(zoom) {
+    if (zoom >= 2.0) return 1;   // very zoomed-in: everything
+    if (zoom >= 1.4) return 3;
+    if (zoom >= 0.9) return 5;
+    return 8;                     // zoomed-out: only the biggest
+  }
+
+  let labelThresholdCache = null;
+  function updateLabelVisibility() {
+    const z = cy.zoom();
+    const threshold = labelThresholdFor(z);
+    if (threshold === labelThresholdCache) return;
+    labelThresholdCache = threshold;
+    cy.batch(function () {
+      cy.nodes().forEach(function (n) {
+        const visible = (n.data('doc_freq') || 0) >= threshold;
+        n.toggleClass('show-label', visible);
+      });
+    });
+    const ind = document.getElementById('graph-zoom-ind');
+    if (ind) {
+      ind.textContent =
+        (z * 100).toFixed(0) + '%' + ' · labels ≥ ' + threshold + ' docs';
+    }
+  }
+
+  cy.on('zoom', updateLabelVisibility);
+  cy.on('layoutstop', updateLabelVisibility);
+
+  // Keep the cy canvas accurate when the surrounding column resizes
+  // (window resize, fullscreen toggle, finder layout shift).
+  function resizeCy() {
+    cy.resize();
+    cy.fit(undefined, 60);
+    updateLabelVisibility();
+  }
+  window.addEventListener('resize', resizeCy);
+  const ro = new ResizeObserver(function () { cy.resize(); });
+  const cyContainer = document.getElementById('cy');
+  if (cyContainer) ro.observe(cyContainer);
+
   // ─────────── hover interaction ───────────
   cy.on('mouseover', 'node', function (evt) {
     const node = evt.target;
@@ -208,6 +256,8 @@
     tintEdgesFromSource();
     cy.layout(layoutOpts()).run();
     renderLegend();
+    labelThresholdCache = null;  // force a recompute even if zoom unchanged
+    updateLabelVisibility();
   });
 
   // ─────────── cluster legend ───────────
@@ -266,6 +316,7 @@
   });
 
   renderLegend();
+  updateLabelVisibility();
 
   // ─────────── reset filter form helper ───────────
   window.resetGraphFilters = function () {

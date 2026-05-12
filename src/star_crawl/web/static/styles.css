@@ -1087,3 +1087,21 @@ body.finder-fullscreen [data-action="toggle-fullscreen"]::after {
   color: var(--muted);
   font-variant-numeric: tabular-nums;
 }
+
+/* Zoom indicator on the graph canvas */
+.graph-zoom-ind {
+  position: absolute;
+  top: 0.6rem;
+  right: 0.8rem;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--muted);
+  background: color-mix(in oklch, var(--surface) 88%, transparent);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  padding: 0.3rem 0.55rem;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  pointer-events: none;
+  user-select: none;
+}
