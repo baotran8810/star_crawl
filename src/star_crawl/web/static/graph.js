@@ -29,7 +29,11 @@
     wheelSensitivity: 0.25,
     layout: layoutOpts(),
     style: [
-      // Base node — pill shape with cluster fill + soft border for separation
+      // Base node — pill shape with cluster fill + soft border. Size + font
+      // both scale with doc_freq so small nodes look genuinely small at
+      // default zoom; zooming in makes them legible. min-zoomed-font-size
+      // tells Cytoscape to hide labels that would render below 6px on
+      // screen (avoids unreadable text smear at low zoom).
       {
         selector: 'node',
         style: {
@@ -39,15 +43,16 @@
           'border-color': 'data(color)',
           'border-opacity': 1,
           'color': '#fff',
-          'font-size': 12,
+          'font-size': 'mapData(doc_freq, 1, 50, 8, 14)',
           'font-weight': 600,
           'text-valign': 'center',
           'text-halign': 'center',
-          'text-outline-width': 2.5,
+          'text-outline-width': 2,
           'text-outline-color': 'data(color)',
           'text-outline-opacity': 1,
-          'width':  'mapData(doc_freq, 1, 60, 22, 78)',
-          'height': 'mapData(doc_freq, 1, 60, 22, 78)',
+          'width':  'mapData(doc_freq, 1, 50, 12, 78)',
+          'height': 'mapData(doc_freq, 1, 50, 12, 78)',
+          'min-zoomed-font-size': 6,
           'overlay-opacity': 0,
           'transition-property': 'background-color, border-color, border-width, opacity',
           'transition-duration': '180ms',
