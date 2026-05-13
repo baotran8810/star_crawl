@@ -143,7 +143,7 @@ def read_graph(conn: sqlite3.Connection, filters: GraphFilters) -> dict:
                 "doc_freq": int(r["doc_freq"]),
                 "cluster_id": int(r["cluster_id"]) if r["cluster_id"] else 0,
                 "cluster_label": r["cluster_label"] or "—",
-                "color": r["cluster_color"] or "oklch(70% 0.01 80)",
+                "color": r["cluster_color"] or "#b3b3b3",
             }
         }
         for r in node_rows

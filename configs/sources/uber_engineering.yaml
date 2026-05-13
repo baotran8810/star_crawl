@@ -1,12 +1,16 @@
 name: uber_engineering
 display_name: Uber Engineering
 base_url: https://www.uber.com/us/en/blog/engineering/
-fetcher: http
+fetcher: browser
+browser:
+  stealth: true
+  wait_until: domcontentloaded
+  timeout_ms: 30000
 seed:
   strategy: pagination
   template: https://www.uber.com/us/en/blog/engineering/page/{n}/
   range: [1, 63]
-url_filter: '^https://www\.uber\.com/us/en/blog/[^/]+/$'
+url_filter: '^https://www\.uber\.com/us/en/blog/(?!(?:advertising|business|community-support|earn|eat|engineering|freight|health|higher-education|merchants|ride|transit)/$)[^/]+/$'
 rate_limit:
   rps: 1.0
   concurrency: 5
