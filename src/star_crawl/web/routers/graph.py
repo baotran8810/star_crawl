@@ -23,6 +23,7 @@ from star_crawl.graph.repository import (
     stale_status,
 )
 from star_crawl.web.deps import data_dir, get_conn
+from star_crawl.web.routers.panels import is_panel_request, redirect_to_shell
 
 router = APIRouter()
 EMPTY_THRESHOLD = 20
@@ -99,6 +100,8 @@ async def graph_page(
     filters: GraphFilters = Depends(_filters),
     conn: sqlite3.Connection = Depends(get_conn),
 ):
+    if not is_panel_request(request):
+        return redirect_to_shell(request)
     templates = request.app.state.templates
 
     n_keywords = keyword_count(conn)

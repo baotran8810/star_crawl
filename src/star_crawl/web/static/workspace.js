@@ -565,6 +565,21 @@
     openTab({ ...mapped, focus });
   }
 
+  // Consume `?open=<legacy-url>` on page load (server redirects legacy
+  // routes to /?open=…). Open the matching tab + strip the param so a
+  // future reload doesn't re-open.
+  function consumeOpenQuery() {
+    const u = new URL(window.location.href);
+    const raw = u.searchParams.get('open');
+    if (!raw) return;
+    u.searchParams.delete('open');
+    const cleaned = u.pathname + (u.search || '');
+    try { history.replaceState(history.state, '', cleaned || '/'); } catch (_) {}
+    const mapped = mapHrefToPanel(raw);
+    if (!mapped) return;
+    openTab({ ...mapped, focus: true });
+  }
+
   // ────────────────────── unavailable button ──────────
   function onUnavailableClick(e) {
     const btn = e.target.closest('[data-action="close-active-tab"]');
@@ -592,6 +607,11 @@
         ? state.active_tab_id : state.tabs[0].id;
       activateTab(id);
     }
+
+    // Legacy deep-link support — a server-side redirect of e.g. /articles/123
+    // lands the user at /?open=/articles/123. Parse + open the target tab,
+    // then strip the param from the URL bar so reload doesn't re-open.
+    consumeOpenQuery();
 
     document.addEventListener('click', onActivationClick);
     document.addEventListener('auxclick', onActivationAux);

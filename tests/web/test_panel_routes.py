@@ -84,10 +84,23 @@ def test_panel_search_is_content_only(client: TestClient) -> None:
     _assert_panel_shape(resp.text)
 
 
-def test_legacy_routes_still_have_chrome(client: TestClient) -> None:
-    """Direct URL access (not /panel/) keeps full base.html layout."""
-    for path in ("/articles/1", "/runs/1", "/sources", "/sources/uber_engineering",
-                 "/graph", "/runs", "/search?q=test"):
-        resp = client.get(path)
-        assert resp.status_code == 200, f"{path} returned {resp.status_code}"
-        assert "class=\"topnav\"" in resp.text, f"{path} missing topnav"
+def test_legacy_routes_redirect_to_shell(client: TestClient) -> None:
+    """Direct URL access to legacy routes 302s to the shell with `?open=`.
+
+    The shell at / consumes `?open=` and opens the matching tab; this keeps
+    bookmarks + external links landing inside the new UI rather than the
+    deprecated base.html chrome. /dashboard is the only kept legacy view.
+    """
+    for path in ("/articles/1", "/runs/1", "/runs", "/sources",
+                 "/sources/uber_engineering", "/graph", "/search?q=test"):
+        resp = client.get(path, follow_redirects=False)
+        assert resp.status_code == 302, f"{path} returned {resp.status_code} (want 302)"
+        loc = resp.headers["location"]
+        assert loc.startswith("/?open="), f"{path} → {loc} (missing ?open=)"
+
+
+def test_dashboard_still_has_chrome(client: TestClient) -> None:
+    """/dashboard is the explicit escape-hatch legacy view."""
+    resp = client.get("/dashboard")
+    assert resp.status_code == 200
+    assert 'class="topnav"' in resp.text

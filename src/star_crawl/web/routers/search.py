@@ -8,6 +8,7 @@ import sqlite3
 from fastapi import APIRouter, Depends, HTTPException, Request
 
 from star_crawl.web.deps import get_conn, is_htmx_request
+from star_crawl.web.routers.panels import is_panel_request, redirect_to_shell
 
 router = APIRouter()
 
@@ -34,6 +35,10 @@ async def search(
     page: int = 1,
     conn: sqlite3.Connection = Depends(get_conn),
 ):
+    # HTMX live-search (typed in nav box) still uses this endpoint —
+    # short-circuit those so they get the inline results partial.
+    if not is_panel_request(request) and not is_htmx_request(request):
+        return redirect_to_shell(request)
     page = max(1, page)
     page_size = 20
     offset = (page - 1) * page_size
