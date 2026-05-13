@@ -9,22 +9,23 @@ import networkx as nx
 
 logger = logging.getLogger(__name__)
 
-# Distinct, vivid OKLCH palette. Higher chroma + irregular hue spacing
-# maximises perceived separation between adjacent clusters (vs naive 30°
-# steps that all collapse into "pastel blues" perceptually).
+# Distinct, vivid sRGB palette — perceptually anchored to OKLCH points so
+# clusters stay visually balanced. Hex rather than oklch() because Cytoscape's
+# canvas color parser doesn't recognise the oklch CSS function (only rgb / hsl
+# / hex / named), which would otherwise fall back to gray.
 PALETTE = [
-    "oklch(60% 0.22 250)",  # cobalt blue
-    "oklch(64% 0.19 150)",  # leaf green
-    "oklch(60% 0.24 320)",  # magenta-purple
-    "oklch(70% 0.19 55)",   # amber
-    "oklch(58% 0.22 25)",   # crimson
-    "oklch(72% 0.17 195)",  # teal
-    "oklch(66% 0.18 105)",  # olive
-    "oklch(62% 0.20 285)",  # violet
-    "oklch(68% 0.18 355)",  # coral
-    "oklch(65% 0.17 175)",  # jade
-    "oklch(62% 0.22 335)",  # fuchsia
-    "oklch(70% 0.17 225)",  # azure
+    "#007ffc",  # cobalt blue
+    "#00aa46",  # leaf green
+    "#bb3ad6",  # magenta-purple
+    "#f47600",  # amber
+    "#df202e",  # crimson
+    "#00c3c5",  # teal
+    "#a49600",  # olive
+    "#7e6cf7",  # violet
+    "#e9609e",  # coral
+    "#00af89",  # jade
+    "#d040b9",  # fuchsia
+    "#00b1ed",  # azure
 ]
 
 
@@ -58,14 +59,17 @@ def detect_clusters(
 
 
 def auto_label(
-    cluster_members: dict[int, list[tuple[int, str, int]]],
+    cluster_members: dict[int, list[tuple[int, str, int, int]]],
     *,
     top_k: int = 3,
     user_overrides: dict[int, str] | None = None,
 ) -> dict[int, str]:
-    """Pick a label for each cluster: top-K keywords by doc_freq, joined.
+    """Pick a label for each cluster: top-K most central keywords, joined.
 
-    cluster_members[cluster_id] = list of (kw_id, display, doc_freq).
+    cluster_members[cluster_id] = list of (kw_id, display, doc_freq, intra_degree).
+    Intra-cluster degree dominates so the label reflects the keywords that
+    actually anchor the community; doc_freq breaks ties for terms tied on
+    centrality.
     """
     out: dict[int, str] = {}
     overrides = user_overrides or {}
@@ -73,9 +77,9 @@ def auto_label(
         if cid in overrides:
             out[cid] = overrides[cid]
             continue
-        members_sorted = sorted(members, key=lambda m: -m[2])
+        members_sorted = sorted(members, key=lambda m: (-m[3], -m[2]))
         top = members_sorted[:top_k]
-        out[cid] = " · ".join(d for _, d in [(m[1], m[1]) for m in top])
+        out[cid] = " · ".join(m[1] for m in top)
     return out
 
 

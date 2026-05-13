@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "_panel_base.html" if request.url.path.startswith("/panel/") else "base.html" %}
 {% block title %}Run #{{ run.id }} · star_crawl{% endblock %}
 {% block body %}
 

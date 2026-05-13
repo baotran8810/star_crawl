@@ -90,3 +90,7 @@ async def search(
             "page_size": page_size,
         },
     )
+
+
+# Workspace-shell panel variant.
+router.add_api_route("/panel/search", search, methods=["GET"])

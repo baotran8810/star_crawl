@@ -1,0 +1,24 @@
+{# Icon rail — left edge of the workspace. Each button is a section anchor;
+   clicking sets the tree filter (Phase 4 / US2). For Phase 2 they're inert
+   placeholders so the layout reads correctly. #}
+<nav class="icon-rail" aria-label="Workspace sections">
+  <button type="button" data-section="sources" title="Sources" aria-current="true">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 7h18M3 12h18M3 17h18"/></svg>
+  </button>
+  <button type="button" data-section="graph" title="Graph">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="6" cy="6" r="2"/><circle cx="18" cy="6" r="2"/><circle cx="12" cy="14" r="2"/><circle cx="6" cy="20" r="2"/><circle cx="18" cy="20" r="2"/><path d="M6 8v10M18 8v10M8 6h8M8 20h8M7 8l4 5M17 8l-4 5M7 19l5-4M17 19l-5-4"/></svg>
+  </button>
+  <button type="button" data-section="runs" title="Runs">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+  </button>
+  <button type="button" data-section="search" title="Search">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="11" cy="11" r="6"/><path d="m20 20-3.5-3.5"/></svg>
+  </button>
+  <button type="button" data-section="bookmarks" title="Bookmarks">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M6 3h12v18l-6-4-6 4z"/></svg>
+  </button>
+  <span class="spacer"></span>
+  <button type="button" data-section="tree-toggle" title="Toggle tree (])">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 6h12M4 12h12M4 18h12M19 9l-3 3 3 3"/></svg>
+  </button>
+</nav>

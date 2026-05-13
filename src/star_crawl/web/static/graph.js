@@ -1,8 +1,19 @@
 // Cytoscape graph initialization + interactions.
+//
+// Two entry paths:
+//   1. Legacy direct route /graph (base.html chrome) — auto-boots on DOMContentLoaded
+//      against `document` as root, like before.
+//   2. Workspace shell — `window.starcrawlGraph.boot(rootEl)` is called by
+//      workspace.js after a graph tab's content is fetched into a panel.
+//      Multiple graph tabs each get their own cy instance scoped to rootEl.
 
 (function () {
-  const dataNode = document.getElementById('cy-data');
-  if (!dataNode) return;
+  function bootGraph(rootEl) {
+    rootEl = rootEl || document;
+    const root = rootEl;
+    const $ = (sel) => root.querySelector(sel);
+    const dataNode = $('#cy-data');
+    if (!dataNode) return null;
 
   // ─────────── palette & helpers ───────────
   function readPayload() {
@@ -22,7 +33,7 @@
 
   // ─────────── cytoscape instance ───────────
   const cy = cytoscape({
-    container: document.getElementById('cy'),
+    container: $('#cy'),
     elements: { nodes: payload.nodes || [], edges: payload.edges || [] },
     minZoom: 0.25,
     maxZoom: 3.0,
@@ -30,28 +41,26 @@
     layout: layoutOpts(),
     style: [
       // Base node — pill shape with cluster fill + soft border. Size + font
-      // both scale with doc_freq so small nodes look genuinely small at
-      // default zoom; zooming in makes them legible. min-zoomed-font-size
-      // tells Cytoscape to hide labels that would render below 6px on
-      // screen (avoids unreadable text smear at low zoom).
+      // scale with doc_freq via a precomputed `size` field (sqrt of doc_freq)
+      // so the long tail compresses and the top hubs visibly dominate.
       {
         selector: 'node',
         style: {
           'background-color': 'data(color)',
           'background-opacity': 0.95,
-          'border-width': 2,
+          'border-width': 1.5,
           'border-color': 'data(color)',
           'border-opacity': 1,
           'color': '#fff',
-          'font-size': 'mapData(doc_freq, 1, 50, 8, 14)',
+          'font-size': 'mapData(size, 0, 10, 8, 15)',
           'font-weight': 600,
           'text-valign': 'center',
           'text-halign': 'center',
           'text-outline-width': 2,
           'text-outline-color': 'data(color)',
           'text-outline-opacity': 1,
-          'width':  'mapData(doc_freq, 1, 50, 12, 78)',
-          'height': 'mapData(doc_freq, 1, 50, 12, 78)',
+          'width':  'mapData(size, 0, 10, 10, 96)',
+          'height': 'mapData(size, 0, 10, 10, 96)',
           'min-zoomed-font-size': 6,
           'overlay-opacity': 0,
           'transition-property': 'background-color, border-color, border-width, opacity',
@@ -71,16 +80,25 @@
         style: { 'label': 'data(display)' },
       },
 
-      // Edges — colored from the source node, opacity ∝ NPMI for visual depth
+      // Edges — intra-cluster edges keep the cluster colour (creates a soft
+      // "halo" around each community); inter-cluster edges fade to neutral
+      // gray so they no longer dominate the canvas. Opacity scales with NPMI.
       {
         selector: 'edge',
         style: {
-          'width': 'mapData(npmi, 0.10, 1.0, 1, 6)',
+          'width': 'mapData(npmi, 0.10, 1.0, 0.8, 5)',
           'line-color': 'data(color)',
-          'line-opacity': 'mapData(npmi, 0.10, 1.0, 0.18, 0.55)',
+          'line-opacity': 'mapData(npmi, 0.10, 1.0, 0.10, 0.45)',
           'curve-style': 'straight',
           'transition-property': 'line-opacity, width, line-color',
           'transition-duration': '180ms',
+        },
+      },
+      {
+        selector: 'edge.cross-cluster',
+        style: {
+          'line-color': '#bdc3c7',
+          'line-opacity': 'mapData(npmi, 0.10, 1.0, 0.06, 0.22)',
         },
       },
 
@@ -115,7 +133,7 @@
         selector: 'node.selected',
         style: {
           'border-width': 6,
-          'border-color': 'oklch(60% 0.20 30)',
+          'border-color': '#d95f3a',
           'border-opacity': 0.9,
           'label': 'data(display)',
           'z-index': 100,
@@ -133,28 +151,97 @@
       animate: false,
       randomize: true,
       quality: 'default',
-      nodeRepulsion: 9000,
-      idealEdgeLength: 70,
-      edgeElasticity: 0.45,
-      gravity: 0.35,
+      nodeRepulsion: 14000,
+      idealEdgeLength: 100,
+      edgeElasticity: 0.35,
+      gravity: 0.30,
       gravityRangeCompound: 1.0,
       numIter: 3000,
       tile: true,
-      tilingPaddingHorizontal: 12,
-      tilingPaddingVertical: 12,
-      nodeSeparation: 80,
+      tilingPaddingHorizontal: 18,
+      tilingPaddingVertical: 18,
+      nodeSeparation: 110,
     };
   }
 
-  // ─────────── edge tinting from source cluster ───────────
+  // ─────────── per-node size + edge tinting ───────────
+  // Precompute a sqrt-compressed `size` so big hubs visibly dominate
+  // without crowding the small nodes; Cytoscape's mapData then linearly
+  // ramps this into pixel width.
+  function annotateNodes() {
+    let maxFreq = 1;
+    cy.nodes().forEach(function (n) {
+      const f = n.data('doc_freq') || 1;
+      if (f > maxFreq) maxFreq = f;
+    });
+    const denom = Math.sqrt(maxFreq) || 1;
+    cy.nodes().forEach(function (n) {
+      const f = n.data('doc_freq') || 1;
+      // 0..10 scale so the style `mapData(size, 0, 10, ...)` lines up
+      n.data('size', (Math.sqrt(f) / denom) * 10);
+    });
+  }
+
+  // Edge colour follows the source node's cluster; if the two endpoints
+  // belong to different clusters we mark the edge so it falls into the
+  // neutral-gray `.cross-cluster` style above.
   function tintEdgesFromSource() {
     cy.edges().forEach(function (e) {
       const src = e.source();
-      const color = src.data('color');
-      e.data('color', color);
+      const dst = e.target();
+      e.data('color', src.data('color'));
+      const srcC = src.data('cluster_id');
+      const dstC = dst.data('cluster_id');
+      if (srcC && dstC && srcC !== dstC) {
+        e.addClass('cross-cluster');
+      } else {
+        e.removeClass('cross-cluster');
+      }
     });
   }
-  tintEdgesFromSource();
+
+  // Monochrome mode — replace each node's color with a CSS-variable-driven
+  // grayscale shade chosen by doc_freq (hub = darker, rare = lighter).
+  // Keeps cluster_id intact so toggling colors back works.
+  function readCssVar(name, fallback) {
+    const v = getComputedStyle(document.documentElement).getPropertyValue(name);
+    return (v && v.trim()) || fallback;
+  }
+  function applyColorMode() {
+    const useCluster = !!(window.workspace && window.workspace.getPreference('cluster_color_enabled'));
+    if (useCluster) {
+      cy.nodes().forEach(function (n) {
+        const orig = n.data('cluster_color') || n.data('color');
+        n.data('color', orig);
+      });
+      tintEdgesFromSource();
+      return;
+    }
+    // Monochrome — pick three shades from CSS vars.
+    const hub = readCssVar('--graph-node-hub', '#18181b');
+    const mid = readCssVar('--graph-node', '#3f3f46');
+    const faint = readCssVar('--graph-node-faint', '#71717a');
+    const edge = readCssVar('--graph-edge', '#d4d4d8');
+    // Save original cluster color once so we can restore on toggle.
+    cy.nodes().forEach(function (n) {
+      if (!n.data('cluster_color')) n.data('cluster_color', n.data('color'));
+      const f = n.data('doc_freq') || 0;
+      const shade = f >= 30 ? hub : (f >= 6 ? mid : faint);
+      n.data('color', shade);
+    });
+    cy.edges().forEach(function (e) {
+      e.data('color', edge);
+      e.removeClass('cross-cluster');
+    });
+  }
+
+  annotateNodes();
+  applyColorMode();
+  // Sync the cluster-color toggle checkbox to the persisted preference.
+  const ccBox = $('#cluster-color-toggle');
+  if (ccBox && window.workspace) {
+    ccBox.checked = !!window.workspace.getPreference('cluster_color_enabled');
+  }
 
   // ─────────── zoom-aware labels ───────────
   // As the user zooms in we progressively reveal labels on smaller nodes
@@ -180,7 +267,7 @@
         n.toggleClass('show-label', visible);
       });
     });
-    const ind = document.getElementById('graph-zoom-ind');
+    const ind = $('#graph-zoom-ind');
     if (ind) {
       ind.textContent =
         (z * 100).toFixed(0) + '%' + ' · labels ≥ ' + threshold + ' docs';
@@ -191,7 +278,7 @@
   cy.on('layoutstop', updateLabelVisibility);
 
   // Keep the cy canvas accurate when the surrounding column resizes
-  // (window resize, fullscreen toggle, finder layout shift).
+  // (window resize, fullscreen toggle, finder layout shift, tab activate).
   function resizeCy() {
     cy.resize();
     cy.fit(undefined, 60);
@@ -199,7 +286,7 @@
   }
   window.addEventListener('resize', resizeCy);
   const ro = new ResizeObserver(function () { cy.resize(); });
-  const cyContainer = document.getElementById('cy');
+  const cyContainer = $('#cy');
   if (cyContainer) ro.observe(cyContainer);
 
   // ─────────── hover interaction ───────────
@@ -244,7 +331,7 @@
   });
 
   // Type-ahead suggestion / side-panel neighbor click → focus the matching node
-  document.body.addEventListener('click', function (e) {
+  root.addEventListener('click', function (e) {
     const link = e.target.closest('a[data-kw-id]');
     if (!link) return;
     const kwId = link.dataset.kwId;
@@ -255,20 +342,32 @@
   });
 
   // ─────────── refresh on HTMX data swap ───────────
-  document.body.addEventListener('htmx:afterSwap', function (e) {
+  root.addEventListener('htmx:afterSwap', function (e) {
     if (e.detail.target.id !== 'cy-data') return;
     payload = readPayload();
     cy.json({ elements: { nodes: payload.nodes || [], edges: payload.edges || [] } });
-    tintEdgesFromSource();
+    annotateNodes();
+    applyColorMode();
     cy.layout(layoutOpts()).run();
     renderLegend();
     labelThresholdCache = null;  // force a recompute even if zoom unchanged
     updateLabelVisibility();
   });
 
+  // ─────────── workspace events: toggle cluster color, theme change ───────────
+  document.addEventListener('workspace:cluster-color-changed', () => {
+    applyColorMode();
+    renderLegend();
+  });
+  document.addEventListener('workspace:theme-changed', () => {
+    // CSS vars are now whatever the new theme defines — re-apply monochrome
+    // shades so the canvas matches the new palette.
+    applyColorMode();
+  });
+
   // ─────────── cluster legend ───────────
   function renderLegend() {
-    const target = document.getElementById('graph-legend');
+    const target = $('#graph-legend');
     if (!target) return;
     const byCluster = new Map();
     cy.nodes().forEach(function (n) {
@@ -302,7 +401,7 @@
   }
 
   // Click a legend row → focus that cluster: hide everything else, fit to cluster
-  document.body.addEventListener('click', function (e) {
+  root.addEventListener('click', function (e) {
     const row = e.target.closest('.legend-row');
     if (!row) return;
     const cid = Number(row.dataset.clusterId);
@@ -317,7 +416,7 @@
       { fit: { eles: inCluster, padding: 80 } },
       { duration: 350, easing: 'ease-out-quad' }
     );
-    document.querySelectorAll('.legend-row.active').forEach(el => el.classList.remove('active'));
+    root.querySelectorAll('.legend-row.active').forEach(el => el.classList.remove('active'));
     row.classList.add('active');
   });
 
@@ -326,7 +425,7 @@
 
   // ─────────── reset filter form helper ───────────
   window.resetGraphFilters = function () {
-    const form = document.getElementById('filter-form');
+    const form = $('#filter-form');
     if (!form) return;
     form.reset();
     form.querySelectorAll('output').forEach(function (out) {
@@ -343,5 +442,19 @@
       cy.nodes('.selected').removeClass('selected');
       cy.animate({ fit: { eles: cy.elements(), padding: 40 } }, { duration: 300 });
     }
+  });
+
+    return cy;
+  }  // end bootGraph
+
+  // Public API for workspace.js to drive graph tabs.
+  window.starcrawlGraph = { boot: bootGraph };
+
+  // Legacy auto-boot for direct route /graph (no workspace shell on the page).
+  // The shell explicitly calls boot() per tab via workspace.js, so skip this
+  // when the workspace shell is loaded.
+  document.addEventListener('DOMContentLoaded', function () {
+    if (document.body.classList.contains('shell')) return;
+    bootGraph(document);
   });
 })();

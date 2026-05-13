@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "_panel_base.html" if request.url.path.startswith("/panel/") else "base.html" %}
 {% block title %}Graph · star_crawl{% endblock %}
 {% block body %}
 
@@ -87,6 +87,12 @@
 
       <button type="button" class="pill" onclick="resetGraphFilters()">Reset</button>
     </form>
+
+    <label class="checkbox toggle-pref" style="margin-top: var(--space-3)">
+      <input type="checkbox" id="cluster-color-toggle"
+             onchange="if(window.workspace) window.workspace.setPreference('cluster_color_enabled', this.checked);">
+      <span>Cluster color</span>
+    </label>
 
     <div class="legend-section">
       <h3 class="legend-section-h">Clusters</h3>

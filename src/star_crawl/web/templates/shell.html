@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>star_crawl · workspace</title>
+<link rel="stylesheet" href="/static/styles.css">
+<link rel="stylesheet" href="/static/tokens.css">
+<link rel="stylesheet" href="/static/shell.css">
+{# theme.js runs synchronously BEFORE first paint to avoid flash-of-wrong-theme #}
+<script src="/static/theme.js"></script>
+<script src="/static/vendor/htmx.min.js" defer></script>
+{# graph vendor scripts preloaded so panel content can boot a fresh cy instance #}
+<script src="/static/vendor/cytoscape.min.js" defer></script>
+<script src="/static/vendor/layout-base.js" defer></script>
+<script src="/static/vendor/cose-base.js" defer></script>
+<script src="/static/vendor/cytoscape-fcose.js" defer></script>
+<script src="/static/graph.js" defer></script>
+<script src="/static/shortcuts.js" defer></script>
+<script src="/static/palette.js" defer></script>
+<script src="/static/tree.js" defer></script>
+<script src="/static/workspace.js" defer></script>
+</head>
+<body class="shell">
+<div id="workspace">
+  {% include "partials/icon_rail.html" %}
+
+  <aside class="tree" id="tree-root"
+         hx-get="/tree"
+         hx-trigger="load"
+         hx-swap="innerHTML">
+    <p class="placeholder">Loading…</p>
+  </aside>
+
+  <main class="main" id="workspace-main">
+    {% include "partials/tab_bar.html" %}
+    <div class="panels" id="workspace-panels">
+      {# Tab panels are created client-side by workspace.js. Initial empty
+         state for Phase 2; auto-opens a graph tab in Phase 3 / US1. #}
+      <div class="tab-panel placeholder" id="empty-state">
+        <div>
+          <p style="text-align:center; color: var(--text-faint)">
+            Workspace shell ready.<br>
+            Tabs come online in Phase 3 (US1).
+          </p>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  {% include "partials/status_bar.html" %}
+</div>
+</body>
+</html>

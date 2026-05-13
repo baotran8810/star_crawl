@@ -11,7 +11,7 @@
 <nav class="topnav">
   <a class="logo" href="/">star_<em>crawl</em></a>
   <div class="links">
-    <a href="/" class="{% if request.url.path == '/' %}active{% endif %}">Dashboard</a>
+    <a href="/dashboard" class="{% if request.url.path == '/dashboard' %}active{% endif %}">Dashboard</a>
     <a href="/sources" class="{% if '/sources' in request.url.path %}active{% endif %}">Sources</a>
     <a href="/graph" class="{% if '/graph' in request.url.path %}active{% endif %}">Graph</a>
     <a href="/runs" class="{% if '/runs' in request.url.path %}active{% endif %}">Runs</a>

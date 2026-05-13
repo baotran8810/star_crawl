@@ -21,9 +21,97 @@ from pathlib import Path
 
 from star_crawl.db.connection import connect
 from star_crawl.graph.cluster import auto_label, detect_clusters, palette_color
+from star_crawl.graph.glossary import load as load_glossary
 from star_crawl.graph.ppmi import npmi
 
 logger = logging.getLogger(__name__)
+
+
+# Suffixes that already end in 's' but are NOT plural (process, virus, axis,
+# kudos, gas, etc.). Folding these would mangle them, so they're protected.
+_NON_PLURAL_SUFFIXES: tuple[str, ...] = ("ss", "us", "is", "os", "as")
+
+
+def _candidate_singular(term: str) -> str | None:
+    """Best-effort singular form. Returns None if no safe fold applies.
+
+    Rules (in order):
+      `policies` → `policy`             (ies → y)
+      `processes` → `process`           (sses → ss)
+      `boxes` → `box`                   (xes → x)
+      `churches` → `church`             (ches → ch)
+      `flashes` → `flash`               (shes → sh)
+      `events` → `event`                (drop trailing s)
+    Protected: short terms (<5 chars), terms ending in ss/us/is/os/as.
+    """
+    if len(term) < 5 or not term.endswith("s"):
+        return None
+    if term.endswith("ies") and len(term) > 4:
+        return term[:-3] + "y"
+    if term.endswith("sses"):
+        return term[:-2]
+    if term.endswith(("xes", "zes")):
+        return term[:-2]
+    if term.endswith(("ches", "shes")) and len(term) > 5:
+        return term[:-2]
+    if term.endswith(_NON_PLURAL_SUFFIXES):
+        return None
+    return term[:-1]
+
+
+def _fold_plurals(conn, *, protected: set[str]) -> int:
+    """Merge plural keywords into their singular form when both already exist.
+
+    Conservative: only merges pairs where BOTH plural and singular rows are
+    present in `keywords`. That avoids mangling words like `kubernetes` or
+    `rails` that have no singular pair. Returns the number of merges done.
+    """
+    rows = conn.execute(
+        "SELECT id, term FROM keywords"
+    ).fetchall()
+    by_term: dict[str, int] = {r["term"]: int(r["id"]) for r in rows}
+
+    pairs: list[tuple[int, int]] = []
+    for r in rows:
+        term = r["term"]
+        if term in protected:
+            continue
+        cand = _candidate_singular(term)
+        if cand is None or cand == term or cand not in by_term:
+            continue
+        plural_id = int(r["id"])
+        singular_id = by_term[cand]
+        if plural_id == singular_id:
+            continue
+        pairs.append((plural_id, singular_id))
+
+    for plural_id, singular_id in pairs:
+        # Move article_keywords (idempotent — primary key suppresses dupes).
+        conn.execute(
+            """INSERT OR IGNORE INTO article_keywords
+                   (article_id, keyword_id, score, is_glossary)
+                 SELECT article_id, ?, score, is_glossary
+                   FROM article_keywords WHERE keyword_id = ?""",
+            (singular_id, plural_id),
+        )
+        conn.execute(
+            "DELETE FROM article_keywords WHERE keyword_id = ?",
+            (plural_id,),
+        )
+        # Recompute doc_freq for the singular from the freshly-merged links.
+        conn.execute(
+            """UPDATE keywords
+                  SET doc_freq = (SELECT COUNT(DISTINCT article_id)
+                                    FROM article_keywords WHERE keyword_id = ?)
+                WHERE id = ?""",
+            (singular_id, singular_id),
+        )
+        conn.execute("DELETE FROM keywords WHERE id = ?", (plural_id,))
+
+    if pairs:
+        conn.commit()
+        logger.info("merged %d plural keywords into singulars", len(pairs))
+    return len(pairs)
 
 
 @dataclass
@@ -56,6 +144,12 @@ def build_graph(
 
     conn = connect(data_dir)
     try:
+        # 0. Fold trivial plural duplicates (e.g., microservices → microservice)
+        #    Glossary canonical names are protected so well-known terms like
+        #    "kubernetes" or "redis" are never mangled.
+        glossary = load_glossary()
+        _fold_plurals(conn, protected=glossary.terms)
+
         # 1. doc_freq filter
         kept = conn.execute(
             "SELECT id, display, doc_freq FROM keywords WHERE doc_freq >= ?",
@@ -131,13 +225,21 @@ def build_graph(
             kw_id: cluster_renum.get(c, 0) for kw_id, c in cluster_by_kw.items()
         }
 
-        # 7. Auto-label
-        members_by_cluster: dict[int, list[tuple[int, str, int]]] = defaultdict(list)
+        # 7. Auto-label — rank cluster members by intra-cluster degree first,
+        #    so labels favour the keyword most central to the community rather
+        #    than whichever happens to have the highest raw doc_freq.
+        intra_deg: Counter[int] = Counter()
+        for a, b, _, _ in edges:
+            if cluster_by_kw.get(a, 0) and cluster_by_kw.get(a) == cluster_by_kw.get(b):
+                intra_deg[a] += 1
+                intra_deg[b] += 1
+
+        members_by_cluster: dict[int, list[tuple[int, str, int, int]]] = defaultdict(list)
         for kw_id, cid in cluster_by_kw.items():
             if cid == 0:
                 continue
             members_by_cluster[cid].append(
-                (kw_id, display_by_id[kw_id], df_by_id[kw_id])
+                (kw_id, display_by_id[kw_id], df_by_id[kw_id], intra_deg[kw_id])
             )
         labels = auto_label(members_by_cluster, user_overrides=existing_overrides)
 

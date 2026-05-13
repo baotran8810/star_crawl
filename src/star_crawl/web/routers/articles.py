@@ -100,3 +100,8 @@ async def article_detail(
         name="article.html",
         context={"article": row, "keywords": keywords, "related": related},
     )
+
+
+# Workspace-shell panel variant — same handler, different URL prefix.
+# Template's conditional extends switches to _panel_base.html based on path.
+router.add_api_route("/panel/article/{article_id}", article_detail, methods=["GET"])

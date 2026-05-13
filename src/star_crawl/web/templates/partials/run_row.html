@@ -17,8 +17,14 @@
   <span class="pill {{ run.status }}">{{ run.status }}</span>
   <span class="meta">
     {% if run.status == 'running' %}
-      {{ run.extracted_new }} of {{ run.discovered }} done
-      {% if in_flight is defined %}· {{ in_flight }} in flight{% endif %}
+      {% if live is defined and live.total %}
+        {{ live.done }}/{{ live.total }} done
+        {% if live.failed %}· {{ live.failed }} failed{% endif %}
+        {% if in_flight %}· {{ in_flight }} in flight{% endif %}
+      {% else %}
+        {{ run.extracted_new }} of {{ run.discovered }} done
+        {% if in_flight is defined %}· {{ in_flight }} in flight{% endif %}
+      {% endif %}
     {% else %}
       {{ run.duration_seconds | round(1) }}s · +{{ run.extracted_new }} new
       · {{ run.error_count }} err
