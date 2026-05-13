@@ -195,13 +195,13 @@ description: "Task list for 004-obsidian-ui feature implementation"
 
 **Purpose**: Documentation, end-to-end validation, cleanups.
 
-- [ ] T067 [P] Update `README.md` "Web UI" section to point at the new shell + describe direct-URL back-compat
+- [X] T067 [P] Update `README.md` "Web UI" section to point at the new shell + describe direct-URL back-compat
 - [ ] T068 [P] Update `quickstart.md` if anything drifted during implementation
 - [ ] T069 [P] Slim down `src/star_crawl/web/static/styles.css` — remove rules superseded by `tokens.css`/`shell.css`; keep only route-specific styles still needed
 - [ ] T070 [P] Audit each new client module — confirm each ≤ 250 LOC per Constitution IV; split `graph.js` if it exceeded 400 LOC during US3 work
-- [ ] T071 Run the manual smoke check in `quickstart.md` step-by-step; capture screenshots for the PR
-- [ ] T072 Performance sweep: confirm tab-switch < 100 ms (SC-002), restore first paint < 800 ms (plan §performance goal), theme toggle < 200 ms (SC-006), palette first results < 150 ms; measure with the existing Playwright trace mode
-- [ ] T073 Accessibility sweep: tab through every interactive control, verify WCAG AA contrast in both themes, verify screen-reader-friendly ARIA on tabs + dialog + tree
+- [X] T071 Run the manual smoke check in `quickstart.md` step-by-step; capture screenshots for the PR
+- [X] T072 Performance sweep: confirm tab-switch < 100 ms (SC-002), restore first paint < 800 ms (plan §performance goal), theme toggle < 200 ms (SC-006), palette first results < 150 ms; measure with the existing Playwright trace mode
+- [X] T073 Accessibility sweep: tab through every interactive control, verify WCAG AA contrast in both themes, verify screen-reader-friendly ARIA on tabs + dialog + tree
 - [X] T074 Run full test suite: `pytest tests/web/` + `pytest tests/web/e2e/`; all green
 - [X] T075 Update `.specify/feature.json` and `CLAUDE.md` after merge — keep `feature_directory` pointing at the active or next feature
 

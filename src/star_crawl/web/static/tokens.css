@@ -21,12 +21,12 @@
 
   /* ── text ── */
   --text:              #1c1917;
-  --text-muted:        #57534e;
-  --text-faint:        #a8a29e;
+  --text-muted:        #57534e;   /* 4.5:1 on --bg light */
+  --text-faint:        #78716c;   /* WCAG AA — was #a8a29e (failed 3:1) */
   --link:              #0369a1;
 
   /* ── accent (used sparingly) ── */
-  --accent:            #0284c7;        /* primary action */
+  --accent:            #0369a1;        /* primary action — 5.5:1 on white */
   --accent-fg:         #ffffff;
   --accent-soft:       #e0f2fe;
   --danger:            #b91c1c;
@@ -83,6 +83,10 @@
   --ease-out-soft:     cubic-bezier(.2, .8, .2, 1);
 }
 
+/* Bridge — legacy `--muted` from styles.css needs to track theme too. */
+[data-theme="light"] { --muted: #57534e; }
+[data-theme="dark"]  { --muted: #d6d3d1; }
+
 [data-theme="dark"] {
   --bg:                #1c1917;
   --surface:           #292524;
@@ -93,8 +97,8 @@
   --shadow:            0 1px 2px rgba(0,0,0,.40), 0 4px 12px rgba(0,0,0,.30);
 
   --text:              #f5f5f4;
-  --text-muted:        #a8a29e;
-  --text-faint:        #78716c;
+  --text-muted:        #d6d3d1;
+  --text-faint:        #a8a29e;   /* WCAG AA — was #78716c (failed) */
   --link:              #38bdf8;
 
   --accent:            #0ea5e9;
