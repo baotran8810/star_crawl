@@ -12,6 +12,7 @@ from star_crawl.graph.repository import (
     read_related_articles,
 )
 from star_crawl.web.deps import get_conn
+from star_crawl.web.routers.panels import is_panel_request, redirect_to_shell
 
 router = APIRouter()
 
@@ -82,6 +83,8 @@ async def article_detail(
     request: Request,
     conn: sqlite3.Connection = Depends(get_conn),
 ):
+    if not is_panel_request(request):
+        return redirect_to_shell(request)
     row = conn.execute(
         """SELECT a.*, s.display_name AS source_display_name
              FROM articles a JOIN sources s ON s.name = a.source_name

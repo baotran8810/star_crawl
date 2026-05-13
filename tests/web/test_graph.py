@@ -124,7 +124,7 @@ def empty_graph_client(tmp_path: Path, monkeypatch):
 
 @pytest.mark.integration
 def test_graph_page_renders(graph_client):
-    r = graph_client.get("/graph")
+    r = graph_client.get("/panel/graph")
     assert r.status_code == 200
     assert "Topic graph" in r.text
     assert "cytoscape" in r.text.lower()
@@ -132,7 +132,7 @@ def test_graph_page_renders(graph_client):
 
 @pytest.mark.integration
 def test_graph_page_empty_state(empty_graph_client):
-    r = empty_graph_client.get("/graph")
+    r = empty_graph_client.get("/panel/graph")
     assert r.status_code == 200
     assert "Corpus too small" in r.text
     # Empty state has no Cytoscape script

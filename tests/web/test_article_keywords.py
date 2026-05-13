@@ -150,7 +150,7 @@ def test_keywords_empty_state_when_no_links(client_with_kw_corpus, tmp_path: Pat
 
 @pytest.mark.integration
 def test_full_article_page_includes_keywords(client_with_kw_corpus):
-    r = client_with_kw_corpus.get("/articles/2")
+    r = client_with_kw_corpus.get("/panel/article/2")
     assert r.status_code == 200
     # Full page has the Keywords section too
     assert "Kafka" in r.text

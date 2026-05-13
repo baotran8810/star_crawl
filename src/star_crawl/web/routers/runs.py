@@ -8,6 +8,7 @@ from datetime import date
 from fastapi import APIRouter, Depends, HTTPException, Request
 
 from star_crawl.web.deps import get_conn
+from star_crawl.web.routers.panels import is_panel_request, redirect_to_shell
 
 router = APIRouter()
 
@@ -20,6 +21,8 @@ async def list_runs(
     since: str | None = None,
     conn: sqlite3.Connection = Depends(get_conn),
 ):
+    if not is_panel_request(request):
+        return redirect_to_shell(request)
     where = []
     params: list[object] = []
     if source:
@@ -73,6 +76,8 @@ async def run_detail(
     request: Request,
     conn: sqlite3.Connection = Depends(get_conn),
 ):
+    if not is_panel_request(request):
+        return redirect_to_shell(request)
     run = conn.execute(
         """SELECT cr.*, s.display_name AS source_display,
                   (julianday(COALESCE(cr.finished_at, CURRENT_TIMESTAMP))

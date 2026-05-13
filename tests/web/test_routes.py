@@ -35,7 +35,7 @@ def test_home_empty_state(client_empty):
 
 @pytest.mark.integration
 def test_sources_list(client):
-    r = client.get("/sources")
+    r = client.get("/panel/sources")
     assert r.status_code == 200
     assert "Grab Engineering" in r.text
     assert "Uber Engineering" in r.text
@@ -43,7 +43,7 @@ def test_sources_list(client):
 
 @pytest.mark.integration
 def test_source_detail(client):
-    r = client.get("/sources/grab_engineering")
+    r = client.get("/panel/source/grab_engineering")
     assert r.status_code == 200
     assert "Grab Engineering" in r.text
     assert "Building a real-time event pipeline" in r.text
@@ -51,14 +51,14 @@ def test_source_detail(client):
 
 @pytest.mark.integration
 def test_source_detail_404(client):
-    r = client.get("/sources/nonexistent")
+    r = client.get("/panel/source/nonexistent")
     assert r.status_code == 404
     assert "not configured" in r.text
 
 
 @pytest.mark.integration
 def test_source_detail_htmx_returns_partial(client):
-    r = client.get("/sources/grab_engineering", headers={"HX-Request": "true"})
+    r = client.get("/panel/source/grab_engineering", headers={"HX-Request": "true"})
     assert r.status_code == 200
     # partial: no <html> wrapper
     assert "<html" not in r.text.lower()
@@ -67,7 +67,7 @@ def test_source_detail_htmx_returns_partial(client):
 
 @pytest.mark.integration
 def test_article_detail(client):
-    r = client.get("/articles/1")
+    r = client.get("/panel/article/1")
     assert r.status_code == 200
     assert "Building a real-time event pipeline" in r.text
     assert "Jane Doe" in r.text
@@ -75,13 +75,13 @@ def test_article_detail(client):
 
 @pytest.mark.integration
 def test_article_404(client):
-    r = client.get("/articles/9999")
+    r = client.get("/panel/article/9999")
     assert r.status_code == 404
 
 
 @pytest.mark.integration
 def test_search_returns_results(client):
-    r = client.get("/search?q=kafka")
+    r = client.get("/panel/search?q=kafka")
     assert r.status_code == 200
     assert "real-time event pipeline" in r.text.lower()
     assert "<mark>" in r.text  # highlight marker
@@ -89,21 +89,21 @@ def test_search_returns_results(client):
 
 @pytest.mark.integration
 def test_search_empty_query(client):
-    r = client.get("/search")
+    r = client.get("/panel/search")
     assert r.status_code == 200
     assert "Type a query" in r.text
 
 
 @pytest.mark.integration
 def test_search_no_results(client):
-    r = client.get("/search?q=zzznotfoundzzz")
+    r = client.get("/panel/search?q=zzznotfoundzzz")
     assert r.status_code == 200
     assert "No matches" in r.text
 
 
 @pytest.mark.integration
 def test_search_filters_by_source(client):
-    r = client.get("/search?q=event&source=uber_engineering")
+    r = client.get("/panel/search?q=event&source=uber_engineering")
     assert r.status_code == 200
     # Should not include Grab's pipeline article
     assert "Building a real-time event pipeline" not in r.text
@@ -119,7 +119,7 @@ def test_search_special_chars_dont_crash(client):
 
 @pytest.mark.integration
 def test_search_htmx_returns_partial(client):
-    r = client.get("/search?q=kafka", headers={"HX-Request": "true"})
+    r = client.get("/panel/search?q=kafka", headers={"HX-Request": "true"})
     assert r.status_code == 200
     assert "<html" not in r.text.lower()
 
@@ -179,7 +179,7 @@ def test_xss_in_content_is_sanitized(client_empty, populated_data_dir, monkeypat
     from fastapi.testclient import TestClient
 
     client = TestClient(app_module.app)
-    r = client.get(f"/articles/{article_id}")
+    r = client.get(f"/panel/article/{article_id}")
     assert r.status_code == 200
     # Body content must be sanitized — no script tag injected via markdown.
     # The base template has its own <script> for keyboard shortcuts; isolate

@@ -23,6 +23,7 @@ from star_crawl.core.schemas import SourceConfig
 from star_crawl.sinks.sqlite import upsert_source
 from star_crawl.sources.loader import SourceLoadError, load_one_by_name
 from star_crawl.web.deps import data_dir, get_conn, is_htmx_request
+from star_crawl.web.routers.panels import is_panel_request, redirect_to_shell
 
 router = APIRouter()
 PAGE_SIZE = 25
@@ -35,6 +36,8 @@ NAME_RE = re.compile(r"^[a-z][a-z0-9_]+$")
 
 @router.get("/sources")
 async def list_sources(request: Request, conn: sqlite3.Connection = Depends(get_conn)):
+    if not is_panel_request(request):
+        return redirect_to_shell(request)
     sources = conn.execute(
         """SELECT name, display_name, fetcher, seed_strategy,
                   article_count, last_crawled_at, policy_opt_in
@@ -106,6 +109,8 @@ async def source_detail(
     order: str = "desc",
     conn: sqlite3.Connection = Depends(get_conn),
 ):
+    if not is_panel_request(request):
+        return redirect_to_shell(request)
     src = conn.execute("SELECT * FROM sources WHERE name = ?", (name,)).fetchone()
     if src is None:
         raise HTTPException(status_code=404, detail=f"source '{name}' not configured")

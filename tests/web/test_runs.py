@@ -79,7 +79,7 @@ def client_runs(runs_data_dir):
 
 @pytest.mark.integration
 def test_runs_list(client_runs):
-    r = client_runs.get("/runs")
+    r = client_runs.get("/panel/runs")
     assert r.status_code == 200
     assert "Crawl runs" in r.text
     # All three runs visible
@@ -90,7 +90,7 @@ def test_runs_list(client_runs):
 
 @pytest.mark.integration
 def test_runs_filter_by_status(client_runs):
-    r = client_runs.get("/runs?status=failed")
+    r = client_runs.get("/panel/runs?status=failed")
     assert r.status_code == 200
     # The pill class for the failed run is present
     assert 'class="pill failed"' in r.text
@@ -102,13 +102,13 @@ def test_runs_filter_by_status(client_runs):
 
 @pytest.mark.integration
 def test_runs_filter_invalid_status(client_runs):
-    r = client_runs.get("/runs?status=garbage")
+    r = client_runs.get("/panel/runs?status=garbage")
     assert r.status_code == 422
 
 
 @pytest.mark.integration
 def test_run_detail(client_runs):
-    r = client_runs.get("/runs/1")
+    r = client_runs.get("/panel/run/1")
     assert r.status_code == 200
     assert "Article from run 1" in r.text
     # Stat strip
@@ -118,7 +118,7 @@ def test_run_detail(client_runs):
 
 @pytest.mark.integration
 def test_run_detail_with_errors(client_runs):
-    r = client_runs.get("/runs/2")
+    r = client_runs.get("/panel/run/2")
     assert r.status_code == 200
     assert "fetch" in r.text
     assert "HTTP 503" in r.text
@@ -126,14 +126,14 @@ def test_run_detail_with_errors(client_runs):
 
 @pytest.mark.integration
 def test_run_detail_404(client_runs):
-    r = client_runs.get("/runs/9999")
+    r = client_runs.get("/panel/run/9999")
     assert r.status_code == 404
 
 
 @pytest.mark.integration
 def test_running_row_carries_polling(client_runs):
     """The running run's HTML row must include hx-trigger='every 2s'."""
-    r = client_runs.get("/runs")
+    r = client_runs.get("/panel/runs")
     assert r.status_code == 200
     # Find the row for run #3
     assert 'id="run-row-3"' in r.text

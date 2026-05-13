@@ -67,7 +67,7 @@ def test_rebuild_button_present_on_graph_page(graph_client, tmp_path: Path, monk
     finally:
         conn.close()
 
-    r = graph_client.get("/graph")
+    r = graph_client.get("/panel/graph")
     assert r.status_code == 200
     assert '/graph/rebuild' in r.text
     assert "Rebuild graph" in r.text
@@ -76,7 +76,7 @@ def test_rebuild_button_present_on_graph_page(graph_client, tmp_path: Path, monk
 @pytest.mark.integration
 def test_rebuild_button_on_empty_page(graph_client):
     """Empty-state page (no graph yet) also exposes a rebuild button."""
-    r = graph_client.get("/graph")
+    r = graph_client.get("/panel/graph")
     # Empty state — keyword_count == 0 → graph_empty.html
     assert r.status_code == 200
     assert "Corpus too small" in r.text
@@ -109,6 +109,6 @@ def test_rebuilding_banner_shown_with_query_param(graph_client, tmp_path: Path):
     finally:
         conn.close()
 
-    r = graph_client.get("/graph?rebuilding=1")
+    r = graph_client.get("/panel/graph?rebuilding=1")
     assert r.status_code == 200
     assert "Rebuild started" in r.text
