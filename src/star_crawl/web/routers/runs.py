@@ -135,14 +135,31 @@ async def run_progress_partial(
     if run is None:
         raise HTTPException(status_code=404, detail=f"run #{run_id} not found")
 
-    in_flight = conn.execute(
-        "SELECT COUNT(*) FROM frontier WHERE run_id = ? AND state = 'in_progress'",
-        (run_id,),
-    ).fetchone()[0]
+    counts = dict(
+        conn.execute(
+            """SELECT state, COUNT(*) FROM frontier
+                WHERE run_id = ?
+                GROUP BY state""",
+            (run_id,),
+        ).fetchall()
+    )
+    in_flight = counts.get("in_progress", 0)
+    live = {
+        "done": counts.get("done", 0),
+        "failed": counts.get("failed", 0),
+        "skipped": counts.get("skipped", 0),
+        "pending": counts.get("pending", 0),
+        "total": sum(counts.values()),
+    }
 
     templates = request.app.state.templates
     return templates.TemplateResponse(
         request=request,
         name="partials/run_row.html",
-        context={"run": run, "in_flight": in_flight},
+        context={"run": run, "in_flight": in_flight, "live": live},
     )
+
+
+# Workspace-shell panel variants.
+router.add_api_route("/panel/runs", list_runs, methods=["GET"])
+router.add_api_route("/panel/run/{run_id}", run_detail, methods=["GET"])

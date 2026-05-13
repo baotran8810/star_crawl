@@ -1,0 +1,13 @@
+{# Lazy-expanded articles under one source. Used when tree.js fetches
+   /tree?section=sources/<name>. #}
+<ul class="tree-children">
+{% for a in articles %}
+<li class="tree-row tree-leaf"
+    data-kind="article"
+    data-target-id="{{ a.id }}"
+    data-panel-url="/panel/article/{{ a.id }}"
+    data-title="{{ a.title }}">
+  <span>{{ a.title }}</span>
+</li>
+{% endfor %}
+</ul>

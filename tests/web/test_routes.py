@@ -16,7 +16,8 @@ def test_healthz_ok(client):
 
 @pytest.mark.integration
 def test_home_renders(client):
-    r = client.get("/")
+    """Legacy dashboard is now at /dashboard; / serves the workspace shell."""
+    r = client.get("/dashboard")
     assert r.status_code == 200
     assert "Overview" in r.text
     assert "Grab Engineering" in r.text
@@ -27,7 +28,7 @@ def test_home_renders(client):
 
 @pytest.mark.integration
 def test_home_empty_state(client_empty):
-    r = client_empty.get("/")
+    r = client_empty.get("/dashboard")
     assert r.status_code == 200
     assert "No articles yet" in r.text
 

@@ -1,0 +1,122 @@
+/* tokens.css — design tokens for the Obsidian-style workspace shell.
+ *
+ * Single source of truth for color, spacing, radius, typography. The shell
+ * reads everything through CSS variables; flipping <html data-theme="dark">
+ * swaps the dark palette in. Light is the default.
+ *
+ * NOTE: hex (not oklch) for graph node fills so Cytoscape's canvas color
+ * parser can read them — see specs/004-obsidian-ui/research.md §R6.
+ */
+
+:root,
+[data-theme="light"] {
+  /* ── surface ── */
+  --bg:                #fafaf9;        /* workspace background */
+  --surface:           #ffffff;        /* tree, tab bar, status bar */
+  --surface-2:         #f5f5f4;        /* hovered surface */
+  --surface-sunken:    #f0efed;        /* tab bar inactive area */
+  --border:            #e7e5e4;        /* subtle dividers */
+  --border-strong:     #d6d3d1;
+  --shadow:            0 1px 2px rgba(0,0,0,.04), 0 4px 12px rgba(0,0,0,.04);
+
+  /* ── text ── */
+  --text:              #1c1917;
+  --text-muted:        #57534e;
+  --text-faint:        #a8a29e;
+  --link:              #0369a1;
+
+  /* ── accent (used sparingly) ── */
+  --accent:            #0284c7;        /* primary action */
+  --accent-fg:         #ffffff;
+  --accent-soft:       #e0f2fe;
+  --danger:            #b91c1c;
+  --success:           #15803d;
+  --warning:           #b45309;
+
+  /* ── graph canvas (monochrome) ── */
+  --graph-node:        #3f3f46;        /* default node fill (mid-gray) */
+  --graph-node-hub:    #18181b;        /* large nodes — darker */
+  --graph-node-faint:  #71717a;        /* small nodes — lighter */
+  --graph-edge:        #d4d4d8;        /* edges */
+  --graph-edge-strong: #a1a1aa;        /* hovered edges */
+  --canvas-bg:         #fafaf9;
+  --canvas-dot:        #d6d3d1;
+
+  /* ── spacing ── */
+  --space-0: 0;
+  --space-1: 0.25rem;        /* 4 */
+  --space-2: 0.5rem;         /* 8 */
+  --space-3: 0.75rem;        /* 12 */
+  --space-4: 1rem;           /* 16 */
+  --space-5: 1.5rem;         /* 24 */
+  --space-6: 2rem;           /* 32 */
+  --space-7: 3rem;           /* 48 */
+
+  /* ── radius ── */
+  --radius-1: 4px;
+  --radius-2: 6px;
+  --radius-3: 8px;
+  --radius-pill: 9999px;
+
+  /* ── shell layout ── */
+  --rail-width:        48px;
+  --tree-width:        280px;
+  --status-height:     28px;
+  --tab-height:        36px;
+
+  /* ── typography ── */
+  --font-sans:         -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI",
+                       Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono:         ui-monospace, SFMono-Regular, "JetBrains Mono", Menlo,
+                       Consolas, monospace;
+  --font-size-xs:      0.75rem;
+  --font-size-sm:      0.8125rem;
+  --font-size-base:    0.9375rem;
+  --font-size-lg:      1.0625rem;
+  --font-size-xl:      1.25rem;
+  --line-height-base:  1.5;
+  --line-height-tight: 1.25;
+
+  /* ── motion ── */
+  --duration-fast:     120ms;
+  --duration-normal:   200ms;
+  --ease-out-soft:     cubic-bezier(.2, .8, .2, 1);
+}
+
+[data-theme="dark"] {
+  --bg:                #1c1917;
+  --surface:           #292524;
+  --surface-2:         #3f3a36;
+  --surface-sunken:    #1c1917;
+  --border:            #3f3a36;
+  --border-strong:     #57534e;
+  --shadow:            0 1px 2px rgba(0,0,0,.40), 0 4px 12px rgba(0,0,0,.30);
+
+  --text:              #f5f5f4;
+  --text-muted:        #a8a29e;
+  --text-faint:        #78716c;
+  --link:              #38bdf8;
+
+  --accent:            #0ea5e9;
+  --accent-fg:         #0c1418;
+  --accent-soft:       #082f49;
+  --danger:            #f87171;
+  --success:           #4ade80;
+  --warning:           #fbbf24;
+
+  --graph-node:        #a1a1aa;
+  --graph-node-hub:    #fafafa;
+  --graph-node-faint:  #71717a;
+  --graph-edge:        #44403c;
+  --graph-edge-strong: #78716c;
+  --canvas-bg:         #1c1917;
+  --canvas-dot:        #44403c;
+}
+
+/* ── base typography reset on top of the existing stylesheet ── */
+html {
+  font-family: var(--font-sans);
+  font-size: 16px;
+  color-scheme: light dark;
+}
+[data-theme="dark"] html { color-scheme: dark; }

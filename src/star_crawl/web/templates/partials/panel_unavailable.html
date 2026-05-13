@@ -1,0 +1,11 @@
+{# Inline unavailable state for a tab whose underlying item is gone (deleted
+   article, removed run, broken URL). Rendered with HTTP 200 so the workspace
+   keeps the tab open with a Close action — never bubbles as an error. #}
+<div class="panel-unavailable">
+  <h2>This tab can no longer be opened.</h2>
+  {% if reason %}<p class="muted">{{ reason }}</p>{% endif %}
+  {% if target_url %}
+    <p class="muted">Original URL: <code>{{ target_url }}</code></p>
+  {% endif %}
+  <p><button type="button" class="pill" data-action="close-active-tab">Close this tab</button></p>
+</div>

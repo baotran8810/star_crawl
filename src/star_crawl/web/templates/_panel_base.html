@@ -1,0 +1,5 @@
+{# Panel-mode wrapper: renders only the body block, no chrome, no <html>.
+   Templates pick this vs base.html via:
+     {% extends (panel and "_panel_base.html") or "base.html" %}
+   so the same template body works for both direct URLs and tab panels. #}
+{% block body %}{% endblock %}

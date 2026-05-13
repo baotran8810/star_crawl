@@ -98,7 +98,9 @@ def create_app() -> FastAPI:
             )
 
     # register routers
-    from star_crawl.web.routers import articles, graph, home, runs, search, sources
+    from star_crawl.web.routers import (
+        articles, graph, home, palette, runs, search, sources, tree,
+    )
 
     app.include_router(home.router, dependencies=[Depends(auth_required)])
     app.include_router(sources.router, dependencies=[Depends(auth_required)])
@@ -106,6 +108,8 @@ def create_app() -> FastAPI:
     app.include_router(search.router, dependencies=[Depends(auth_required)])
     app.include_router(runs.router, dependencies=[Depends(auth_required)])
     app.include_router(graph.router, dependencies=[Depends(auth_required)])
+    app.include_router(tree.router, dependencies=[Depends(auth_required)])
+    app.include_router(palette.router, dependencies=[Depends(auth_required)])
 
     return app
 

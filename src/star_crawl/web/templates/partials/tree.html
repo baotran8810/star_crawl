@@ -1,0 +1,62 @@
+{# Navigation tree — root fragment.
+   Activation rows carry data-kind + data-target-id + data-panel-url which
+   workspace.js picks up on click (per shell handler in workspace.js). #}
+
+<div class="tree-section" data-section="sources">
+  <h3 class="tree-section-h"
+      hx-get="/tree?section=sources&expand=true"
+      hx-target="closest .tree-section"
+      hx-swap="outerHTML"
+      role="button"
+      aria-expanded="false">
+    <span class="chev">▸</span> Sources
+  </h3>
+  <ul>
+    {% for s in sources %}
+    <li class="tree-row"
+        data-kind="source"
+        data-target-id="{{ s.name }}"
+        data-panel-url="/panel/source/{{ s.name }}"
+        data-title="{{ s.display_name }}">
+      <span>{{ s.display_name }}</span>
+      <small class="muted">{{ s.article_count }}</small>
+    </li>
+      {% if expand and s.children %}
+        <ul class="tree-children">
+        {% for a in s.children %}
+        <li class="tree-row tree-leaf"
+            data-kind="article"
+            data-target-id="{{ a.id }}"
+            data-panel-url="/panel/article/{{ a.id }}"
+            data-title="{{ a.title }}">
+          <span>{{ a.title }}</span>
+        </li>
+        {% endfor %}
+        </ul>
+      {% endif %}
+    {% endfor %}
+  </ul>
+</div>
+
+<div class="tree-section" data-section="runs">
+  <h3 class="tree-section-h">
+    <span class="chev">▾</span> Recent runs
+  </h3>
+  <ul>
+    {% for r in runs %}
+    <li class="tree-row"
+        data-kind="run"
+        data-target-id="{{ r.id }}"
+        data-panel-url="/panel/run/{{ r.id }}"
+        data-title="Run #{{ r.id }} · {{ r.source_name }}">
+      <span>#{{ r.id }} · {{ r.source_name }}</span>
+      <small class="muted">+{{ r.extracted_new }}{% if r.error_count %} / {{ r.error_count }}e{% endif %}</small>
+    </li>
+    {% endfor %}
+  </ul>
+</div>
+
+<div class="tree-section" data-section="bookmarks">
+  <h3 class="tree-section-h"><span class="chev">▸</span> Bookmarks</h3>
+  <p class="placeholder">Coming soon.</p>
+</div>

@@ -81,8 +81,8 @@ def _filters(
     source: list[str] | None = Query(default=None),
     since: str | None = None,
     until: str | None = None,
-    min_freq: int = 2,
-    min_npmi: float = 0.10,
+    min_freq: int = 3,
+    min_npmi: float = 0.15,
     cluster: int | None = None,
     focus: int | None = None,
 ) -> GraphFilters:
@@ -191,3 +191,7 @@ async def rebuild_graph_now():
     env.setdefault("STAR_CRAWL_DATA_DIR", str(data_dir()))
     _spawn_rebuild(env)
     return RedirectResponse(url="/graph?rebuilding=1", status_code=303)
+
+
+# Workspace-shell panel variant — same chassis, different URL prefix.
+router.add_api_route("/panel/graph", graph_page, methods=["GET"])

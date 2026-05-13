@@ -312,3 +312,8 @@ async def run_source_now(name: str):
     )
 
     return RedirectResponse(url="/runs", status_code=303)
+
+
+# Workspace-shell panel variants.
+router.add_api_route("/panel/sources", list_sources, methods=["GET"])
+router.add_api_route("/panel/source/{name}", source_detail, methods=["GET"])

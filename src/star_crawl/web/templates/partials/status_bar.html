@@ -1,0 +1,16 @@
+{# Status bar — bottom of the shell. Theme toggle wires up in Phase 7 (US5).
+   For Phase 2 the button is inert. #}
+<footer class="status-bar" role="contentinfo">
+  <span class="meta">
+    <span title="Project">{{ project_name or "star_crawl" }}</span>
+    <span aria-hidden="true">·</span>
+    <span>{{ article_count or 0 }} articles</span>
+    <span aria-hidden="true">·</span>
+    <span>{{ source_count or 0 }} sources</span>
+  </span>
+  <span class="grow"></span>
+  <button type="button" id="theme-toggle" title="Toggle theme" aria-label="Toggle theme">
+    <span aria-hidden="true">◐</span> theme
+  </button>
+  <a href="/dashboard" title="Legacy dashboard">⚙</a>
+</footer>
