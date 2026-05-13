@@ -504,6 +504,67 @@
     });
   }
 
+  // ─────── intercept legacy <a href="/articles/123"> etc. inside the shell
+  // Related-article links, keyword chips, run-row timestamps etc render as
+  // plain anchors to legacy routes. Inside the workspace we want them to
+  // open as tabs instead of navigating the whole window.
+  function mapHrefToPanel(href) {
+    if (!href || href.startsWith('#') || href.startsWith('//')) return null;
+    if (/^https?:/i.test(href)) return null;
+    let m;
+    if ((m = href.match(/^\/articles\/(\d+)(\?[^#]*)?$/))) {
+      return {
+        kind: 'article', target_id: m[1],
+        title: 'Article #' + m[1],
+        panel_url: '/panel/article/' + m[1],
+      };
+    }
+    if ((m = href.match(/^\/runs\/(\d+)(\?[^#]*)?$/))) {
+      return {
+        kind: 'run', target_id: m[1],
+        title: 'Run #' + m[1],
+        panel_url: '/panel/run/' + m[1],
+      };
+    }
+    if ((m = href.match(/^\/sources\/([a-z0-9_-]+)(\?[^#]*)?$/))) {
+      return {
+        kind: 'source', target_id: m[1],
+        title: m[1],
+        panel_url: '/panel/source/' + m[1],
+      };
+    }
+    if (href === '/graph' || href.startsWith('/graph?')) {
+      return {
+        kind: 'graph', target_id: null,
+        title: 'Topic graph',
+        panel_url: '/panel/graph' + (href.slice(6) || ''),
+      };
+    }
+    if (href === '/search' || href.startsWith('/search?')) {
+      return {
+        kind: 'search', target_id: null,
+        title: 'Search',
+        panel_url: '/panel/search' + (href.slice(7) || ''),
+      };
+    }
+    return null;
+  }
+  function onLegacyLinkClick(e) {
+    if (e.defaultPrevented) return;
+    const a = e.target.closest('a[href]');
+    if (!a) return;
+    if (a.target === '_blank' || a.hasAttribute('download')) return;
+    if (a.hasAttribute('hx-get') || a.hasAttribute('hx-post')) return;
+    if (a.dataset && a.dataset.panelUrl) return;
+    const mapped = mapHrefToPanel(a.getAttribute('href'));
+    if (!mapped) return;
+    e.preventDefault();
+    const focus = !(e.metaKey || e.ctrlKey || e.button === 1);
+    const txt = (a.textContent || '').trim();
+    if (txt && mapped.kind === 'article') mapped.title = txt.slice(0, 80);
+    openTab({ ...mapped, focus });
+  }
+
   // ────────────────────── unavailable button ──────────
   function onUnavailableClick(e) {
     const btn = e.target.closest('[data-action="close-active-tab"]');
@@ -535,6 +596,10 @@
     document.addEventListener('click', onActivationClick);
     document.addEventListener('auxclick', onActivationAux);
     document.addEventListener('click', onUnavailableClick);
+    document.addEventListener('click', onLegacyLinkClick);
+    document.addEventListener('auxclick', (e) => {
+      if (e.button === 1) onLegacyLinkClick(e);
+    });
     window.addEventListener('popstate', onPopState);
 
     emit('workspace:state-restored', {
